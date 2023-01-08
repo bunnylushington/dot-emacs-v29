@@ -55,7 +55,6 @@
         try-complete-file-name-partially
         try-complete-file-name))
 
-
 ;; MacOS function keys.
 (if (eq system-type 'darwin)
     (setq mac-option-modifier '(:function alt :mouse alt)
@@ -171,7 +170,6 @@
 (define-key isearch-mode-map (kbd "C-o") 'isearch-occur)
 (global-set-key (kbd "s-d") 'osx-dictionary-search-input)
 
-
 ;; Backup
 (setq vc-make-backup-files t)
 (defun ii/save-buffer-force-backup (arg)
@@ -180,7 +178,6 @@
   (if (consp arg) (save-buffer) (save-buffer 16)))
 (global-set-key [remap save-buffer] 'ii/save-buffer-force-backup)
 (global-set-key (kbd "C-x s") 'ii/save-buffer-force-backup)
-
 
 ;;;; WTF?
 (defface bookmark-menu-heading '((t  :inherit default-face))
@@ -201,11 +198,6 @@
   :ensure t
   :config
   (info-initialize))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; PACAKGES
-
 
 ;; Vertico
 (use-package vertico
@@ -257,9 +249,6 @@
 (use-package orderless
   :ensure t)
 
-
-
-
 ;; JSON
 (use-package json-mode
   :ensure t)
@@ -271,11 +260,6 @@
   :hook (before-save . magit-wip-commit-initial-backup)
   :config
   (magit-wip-mode 1))
-
-
-;; Markdown
-(use-package markdown-mode
-  :ensure t)
 
 ;; YAML
 (use-package yaml-mode
@@ -295,7 +279,6 @@
 (global-set-key (kbd "s-n") 'vterm)
 (define-key vterm-mode-map (kbd "s-c") 'vterm-copy-mode)
 (define-key vterm-copy-mode-map (kbd "s-c") 'vterm-copy-mode)
-
 
 ;; Forge
 ;; (use-package forge
@@ -442,7 +425,6 @@
 ;;   go install golang.org/x/tools/gopls@latest
 ;;   go install github.com/go-delve/delve/cmd/dlv@latest
 ;;   ln -s ~/go/bin/gopls ~/.local/bin
-
 (use-package go-ts-mode
   :ensure t
   :after (eglot tree-sitter-langs)
@@ -457,12 +439,10 @@
     (add-hook 'before-save-hook #'ii/eglot-organize-imports nil t))
   (add-hook 'go-ts-mode-hook #'ii/before-saving-go))
 
-
 ;; Python
 ;;
 ;; Requires
 ;;  pip3 install jedi autopep8 flake8 ipython importmagic yapf
-
 (use-package elpy
   :ensure t
   :config
@@ -492,7 +472,6 @@
     "Change the Erlang indentation level."
     (interactive "nIndention Level: ")
     (set-variable 'erlang-indent-level spaces t)))
-
 
 ;; Hydra
 (use-package hydra
@@ -558,14 +537,12 @@
   (add-to-list 'imp-default-user-filters `(markdown-mode . ii/markdown-html))
   (add-to-list 'imp-default-user-filters `(gfm-mode . ii/markdown-html)))
 
-
 (use-package simple-httpd
   :ensure t
   :custom
   (httpd-port 9999)
   :config
   (httpd-start))
-
 
 ;; Markdown
 (use-package markdown-mode
@@ -580,7 +557,6 @@
   "Preview an impatient-mode buffer in a browser."
   (interactive)
   (browse-url (format "http://localhost:9999/imp/live/%s" (buffer-name))))
-
 
 ;; RSS
 (use-package elfeed
@@ -602,7 +578,6 @@
   :commands (alert)
   :init
   (setq alert-default-style 'osx-notifier))
-
 
 ;; Treesitter
 (use-package tree-sitter
@@ -628,13 +603,11 @@
                       :foreground "MistyRose4")
   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
 
-
 (use-package tree-sitter-langs
   :ensure t
   :after tree-sitter
   :config
   (push '(go-ts-mode . go) tree-sitter-major-mode-language-alist))
-
 
 (use-package sql
   :ensure t
@@ -652,7 +625,6 @@
   :config
   (define-key outline-minor-mode-map (kbd "<C-tab>") 'outline-cycle))
 
-
 ;; Bookmark+ Configuration
 ;;
 ;; Only loads if bookmark+ has been cloned to
@@ -663,7 +635,6 @@
         (add-to-list 'load-path bookmark-plus-dir)
         (require 'bookmark+)
         (setq bookmark-version-control t))))
-
 
 ;; Nano Theme Configuration.
 ;;
@@ -710,10 +681,6 @@
 (setq-default left-fringe-width 15)
 (window-divider-mode 0)
 
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Custom Functions
 
 (defun ii/what-face (pos)
   "Show face at point"
