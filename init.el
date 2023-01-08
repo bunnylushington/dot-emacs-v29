@@ -653,6 +653,17 @@
   (define-key outline-minor-mode-map (kbd "<C-tab>") 'outline-cycle))
 
 
+;; Bookmark+ Configuration
+;;
+;; Only loads if bookmark+ has been cloned to
+;; user-emacs-directory/bookmark-plus.
+(let ((bookmark-plus-dir (ii/emacs-dir-file "bookmark-plus")))
+  (if (file-directory-p bookmark-plus-dir)
+      (progn
+        (add-to-list 'load-path bookmark-plus-dir)
+        (require 'bookmark+)
+        (setq bookmark-version-control t))))
+
 
 ;; Nano Theme Configuration.
 ;;
