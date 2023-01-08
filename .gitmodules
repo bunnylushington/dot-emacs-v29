@@ -1,0 +1,6 @@
+[submodule "nano-emacs"]
+	path = nano-emacs
+	url = https://github.com/rougier/nano-emacs.git
+[submodule "bookmark-plus"]
+	path = bookmark-plus
+	url = https://github.com/emacsmirror/bookmark-plus.git
