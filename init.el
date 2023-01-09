@@ -85,6 +85,19 @@
   (setq dired-use-ls-dired nil
         dired-vc-rename-file t))
 
+;; Dirvish
+;;
+;; brew install fd ffmpegthumbnailer mediainfo
+;; XXX: this doesn't work yet
+(use-package dirvish
+  :ensure t
+  :after all-the-icons)
+
+
+;; all the icons
+(use-package all-the-icons
+  :ensure t)
+
 ;; ibuffer
 (use-package ibuffer
   :ensure t
@@ -243,7 +256,16 @@
 (use-package consult
   :ensure t
   :bind (("C-x b" . consult-buffer)
+         ("M-g M-g" . consult-goto-line)
+         ("M-s l" . consult-line)
+         ("M-s d" . consult-find)
+         ("C-x r b" . consult-bookmark)
+         ("C-c m" . consult-mode-command)
          ("M-y" . consult-yank-pop)))
+
+(use-package consult-eglot
+  :ensure t
+  :bind ("H-s" . consult-eglot-symbols))
 
 ;; Orderless
 (use-package orderless
@@ -907,7 +929,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(git-gutter diff-hl git-undo magithub ghub gorepl-mode restclient rest-client multi-vterm outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
+   '(consult-eglot all-the-icons dirvish git-gutter diff-hl git-undo magithub ghub gorepl-mode restclient rest-client multi-vterm outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
