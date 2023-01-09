@@ -261,12 +261,15 @@
   (corfu-scroll-margin 4)
 
   ;; corfu-auto is an experiment...
-  (corfu-auto t)
-  (corfu-quit-at-boundary 'separator)
-  (corfu-separator ?\s)
-  (corfu-quit-no-match 'separator)
-  (corfu-preview-current 'insert)
+  ;; (corfu-auto t)
+  ;; (corfu-quit-at-boundary 'separator)
+  ;; (corfu-separator ?\s)
+  ;; (corfu-quit-no-match 'separator)
+  ;; (corfu-preview-current 'insert)
 
+  ;; this is not as slick but works
+  (corfu-auto nil)
+  (corfu-quit-at-boundary nil)
 
   :config
   (global-corfu-mode))
@@ -569,12 +572,19 @@
 ;; Hydra
 (use-package hydra
   :ensure t
+  :demand t
   :bind (("s-i" . ip4g/hydra/body)))
 
 ;; IP4G
-(add-to-list 'load-path
-             (expand-file-name "~/projects/converge/morpho-utils/emacs"))
-; (require 'ip4g)
+;;
+;; NB: it's important hydra set `:demand t` to provide
+;; the necessary macros ip4g requires.
+(let ((ip4g-dir
+       (expand-file-name "~/projects/converge/morpho-utils/emacs")))
+  (if (file-directory-p ip4g-dir)
+      (progn
+        (add-to-list 'load-path ip4g-dir)
+        (require 'ip4g))))
 
 ;; Tramp
 (use-package tramp
