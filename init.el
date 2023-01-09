@@ -89,6 +89,13 @@
 (use-package all-the-icons
   :ensure t)
 
+(use-package all-the-icons-completion
+  :ensure t
+  :after (marginalia all-the-icons)
+  :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
+  :init
+  (all-the-icons-completion-mode))
+
 ;; ibuffer
 (use-package ibuffer
   :ensure t
@@ -209,9 +216,27 @@
 ;; Vertico
 (use-package vertico
   :ensure t
+  :bind (:map vertico-map
+              (("<backspace>" . vertico-directory-delete-char)
+               ("C-w" . vertico-directory-delete-word)
+               ("C-<backspace>" . vertico-directory-delete-word)
+               ("<return>" . vertico-directory-enter)))
+  :hook
+  ((minibuffer-setup . vertico-repeat-save)
+   (rfn-eshadow-update-overlay . vertico-directory-tidy))
+  :custom
+  (vertico-count 14)
+  (vertico-resize nil)
+  (vertico-cycle nil)
+  (vertico-multiform-categories
+   '((bookmark buffer)
+     (t reverse)))
   :init
+  (require 'vertico-buffer)
   (fido-mode -1)
-  (vertico-mode))
+  (vertico-mode)
+  (vertico-multiform-mode))
+
 
 ;; Marginalia
 (use-package marginalia
@@ -282,6 +307,12 @@
 (use-package ghub
   :ensure t)
 
+
+;; Forge
+;; (use-package forge
+;;   :ensure t
+;;   :after magit)
+
 ;; Show (and act on) changed hunks.
 (use-package git-gutter
   :ensure t
@@ -313,10 +344,6 @@
          ("s-," . multi-vterm-prev)
          ("s-." . multi-vterm-next)))
 
-
-;; Forge
-;; (use-package forge
-;;   :after magit)
 
 ;; ;; Quick Buffer Switch
 (use-package quick-buffer-switch
@@ -917,7 +944,7 @@
  ;; If there is more than one, they won't work right.
  '(bmkp-last-as-first-bookmark-file "/Users/bunnylushington/.emacs.d/bookmarks")
  '(package-selected-packages
-   '(yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
+   '(all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
