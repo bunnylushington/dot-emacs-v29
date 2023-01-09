@@ -259,6 +259,7 @@
   :bind (("s-g" . 'magit-status))
   :hook (before-save . magit-wip-commit-initial-backup)
   :config
+  (setq magit-commit-show-diff nil)
   (magit-wip-mode 1))
 
 ;; YAML
@@ -481,7 +482,7 @@
 ;; IP4G
 (add-to-list 'load-path
              (expand-file-name "~/projects/converge/morpho-utils/emacs"))
-(require 'ip4g)
+; (require 'ip4g)
 
 ;; Tramp
 (use-package tramp
