@@ -252,22 +252,48 @@
 
 (use-package corfu
   :ensure t
+  :bind (:map corfu-map
+              ("<space>" . corfu-insert-separator))
+  :custom
+  (corfu-min-width 80)
+  (corfu-max-width corfu-min-width)
+  (corfu-count 14)
+  (corfu-scroll-margin 4)
+
+  ;; corfu-auto is an experiment...
+  (corfu-auto t)
+  (corfu-quit-at-boundary 'separator)
+  (corfu-separator ?\s)
+  (corfu-quit-no-match 'separator)
+  (corfu-preview-current 'insert)
+
+
   :config
   (global-corfu-mode))
 
-(use-package corfu-popupinfo
+(use-package corfu-doc
+  :ensure t
   :after corfu
-  :hook (corfu-mode . corfu-popupinfo-mode)
+  :hook (corfu-mode . corfu-doc-mode)
+  :bind (:map corfu-map
+         (([remap corfu-show-documentation] . corfu-doc-toggle)
+          ("M-n" . corfu-doc-scroll-up)
+          ("M-p" . corfu-doc-scroll-down)))
   :custom
-  (corfu-popupinfo-delay '(0.25 . 0.1))
-  (corfu-popupinfo-hode nil)
-  :config
-  (corfu-popupinfo-mode))
+  (corfu-doc-delay 0.5)
+  (corfu-doc-max-width 70)
+  (corfu-doc-max-height 20)
+  (corfu-echo-documentation nil))
 
 (use-package kind-icon
   :if (display-graphic-p)
   :ensure t
   :after corfu
+  :custom
+  (kind-icon-use-icons t)
+  (kind-icon-default-face 'corfu-default)
+  (kind-icon-blend-background nil)
+  (kind-icon-blend-frac 0.08)
   :config
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
@@ -944,7 +970,7 @@
  ;; If there is more than one, they won't work right.
  '(bmkp-last-as-first-bookmark-file "/Users/bunnylushington/.emacs.d/bookmarks")
  '(package-selected-packages
-   '(all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
+   '(corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
