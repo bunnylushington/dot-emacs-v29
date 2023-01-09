@@ -262,6 +262,17 @@
   (setq magit-commit-show-diff nil)
   (magit-wip-mode 1))
 
+(use-package ghub
+  :ensure t)
+
+;; Magithub
+(use-package magithub
+  :ensure t
+  :after magit
+  :config
+  (magithub-feature-autoinject t)
+  (setq magithub-clone-default-directory "~/Projects"))
+
 ;; YAML
 (use-package yaml-mode
   :ensure t)
@@ -446,6 +457,12 @@
     (add-hook 'before-save-hook #'eglot-format-buffer nil t)
     (add-hook 'before-save-hook #'ii/eglot-organize-imports nil t))
   (add-hook 'go-ts-mode-hook #'ii/before-saving-go))
+
+;; Go REPL
+;;
+;; go install github.com/x-motemen/gore/cmd/gore@latest
+(use-package gorepl-mode
+  :ensure t)
 
 ;; Python
 ;;
@@ -884,7 +901,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(restclient rest-client multi-vterm outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
+   '(magithub ghub gorepl-mode restclient rest-client multi-vterm outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
