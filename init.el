@@ -21,13 +21,6 @@
 (prefer-coding-system 'utf-8)
 (set-language-environment "UTF-8")
 
-(use-package exec-path-from-shell
-  :ensure t
-  :config
-  (setq exec-path-from-shell-variables '("PATH"))
-  (exec-path-from-shell-initialize)
-  (add-to-list 'exec-path "/Applications/Emacs.app/Contents/MacOS/bin"))
-
 ;; Functions to help load path construction.
 (defun ii/emacs-dir-file (file)
   "Concatenate FILE to user-emacs-directory."
@@ -929,8 +922,9 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(bmkp-last-as-first-bookmark-file "/Users/bunnylushington/.emacs.d/bookmarks")
  '(package-selected-packages
-   '(exec-path-from-shell consult-eglot all-the-icons dirvish git-gutter diff-hl git-undo magithub ghub gorepl-mode restclient rest-client multi-vterm outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
+   '(outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
