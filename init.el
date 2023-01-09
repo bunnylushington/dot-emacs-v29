@@ -273,6 +273,12 @@
   (magithub-feature-autoinject t)
   (setq magithub-clone-default-directory "~/Projects"))
 
+;; Show (and act on) changed hunks.
+(use-package git-gutter
+  :ensure t
+  :config
+  (global-git-gutter-mode +1))
+
 ;; YAML
 (use-package yaml-mode
   :ensure t)
