@@ -6,7 +6,6 @@
       warning-suppress-log-types '((comp) (bytecomp))
       warning-minimum-level :error
       frame-title-format "%b"
-      initial-major-mode 'emacs-lisp-mode
       font-lock-maximum-decoration t
       mac-use-title-bar t
       default-directory "~/"
@@ -252,22 +251,11 @@
 
 (use-package corfu
   :ensure t
-  :bind (:map corfu-map
-              ("<space>" . corfu-insert-separator))
   :custom
   (corfu-min-width 80)
   (corfu-max-width corfu-min-width)
   (corfu-count 14)
   (corfu-scroll-margin 4)
-
-  ;; corfu-auto is an experiment...
-  ;; (corfu-auto t)
-  ;; (corfu-quit-at-boundary 'separator)
-  ;; (corfu-separator ?\s)
-  ;; (corfu-quit-no-match 'separator)
-  ;; (corfu-preview-current 'insert)
-
-  ;; this is not as slick but works
   (corfu-auto nil)
   (corfu-quit-at-boundary nil)
 
@@ -971,6 +959,8 @@
 (setq completion-styles '(orderless)
       completion-category-defaults nil
       completion-category-overrides '((file (styles partial-completion))))
+
+(setq initial-major-mode 'emacs-lisp-mode)
 
 
 (custom-set-variables
