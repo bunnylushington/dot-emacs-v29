@@ -86,7 +86,15 @@
 
 ;; all the icons
 (use-package all-the-icons
-  :ensure t)
+  :ensure t
+  :config
+  ;; Use 'prepend for the NS and Mac ports or Emacs will crash.
+(set-fontset-font t 'unicode (font-spec :family "all-the-icons") nil 'append)
+(set-fontset-font t 'unicode (font-spec :family "file-icons") nil 'append)
+(set-fontset-font t 'unicode (font-spec :family "Material Icons") nil 'append)
+(set-fontset-font t 'unicode (font-spec :family "github-octicons") nil 'append)
+(set-fontset-font t 'unicode (font-spec :family "FontAwesome") nil 'append)
+(set-fontset-font t 'unicode (font-spec :family "Weather Icons") nil 'append))
 
 (use-package all-the-icons-completion
   :ensure t
@@ -272,7 +280,7 @@
           ("M-p" . corfu-doc-scroll-down)))
   :custom
   (corfu-doc-delay 0.5)
-  (corfu-doc-max-width 70)
+  (corfu-doc-max-width 90)
   (corfu-doc-max-height 20)
   (corfu-echo-documentation nil))
 
@@ -324,7 +332,6 @@
 (use-package ghub
   :ensure t)
 
-
 ;; Forge
 ;; (use-package forge
 ;;   :ensure t
@@ -344,6 +351,8 @@
 (use-package vterm
   :ensure t
   :config
+  (add-to-list 'vterm-eval-cmds
+               '("update-pwd" (lambda (path) (setq default-directory path))))
   (setq vterm-toggle-fullscreen-p nil
         vterm-toggle-hide-method nil
         disabled-command-hook nil
@@ -362,7 +371,9 @@
          ("s-." . multi-vterm-next)))
 
 
-;; ;; Quick Buffer Switch
+;; Quick Buffer Switch
+;;
+;; Don't forget how useful C-x C-c C-/ is.
 (use-package quick-buffer-switch
   :ensure t
   :config
@@ -970,7 +981,7 @@
  ;; If there is more than one, they won't work right.
  '(bmkp-last-as-first-bookmark-file "/Users/bunnylushington/.emacs.d/bookmarks")
  '(package-selected-packages
-   '(corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
+   '(org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
