@@ -172,12 +172,10 @@
     (rgrep pattern "*" directory)))
 
 ;; Grep Find Setup
-(setq
- grep-find-command
- '("find . -type f -exec grep --color=auto -nH --null -e  \\{\\} +" . 54)
-
- grep-find-template
- "find -H <D> <X> -type f <F> -exec grep <C> -nH --null -e <R> \\{\\} +")
+(grep-apply-setting
+ 'grep-find-command
+ '("rg -n -H --no-heading -e '' $(git rev-parse --show-toplevel || pwd)" . 27))
+(global-set-key (kbd "C-x C-g") 'grep-find)
 
 ;; Convenience Key Bindings
 (global-set-key (kbd "s-w") 'delete-frame)
@@ -996,4 +994,4 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(variable-pitch ((t (:background "#2E3440" :foreground "#ECEFF4" :height 140 :family "Avenir Book")))))
