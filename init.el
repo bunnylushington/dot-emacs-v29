@@ -15,6 +15,7 @@
       calendar-longitude -90.0715)
 
 (midnight-mode)
+(pixel-scroll-precision-mode)
 (add-to-list 'completion-ignored-extensions ".#")
 (global-goto-address-mode)
 (prefer-coding-system 'utf-8)
@@ -89,12 +90,12 @@
   :ensure t
   :config
   ;; Use 'prepend for the NS and Mac ports or Emacs will crash.
-(set-fontset-font t 'unicode (font-spec :family "all-the-icons") nil 'append)
-(set-fontset-font t 'unicode (font-spec :family "file-icons") nil 'append)
-(set-fontset-font t 'unicode (font-spec :family "Material Icons") nil 'append)
-(set-fontset-font t 'unicode (font-spec :family "github-octicons") nil 'append)
-(set-fontset-font t 'unicode (font-spec :family "FontAwesome") nil 'append)
-(set-fontset-font t 'unicode (font-spec :family "Weather Icons") nil 'append))
+  (set-fontset-font t 'unicode (font-spec :family "all-the-icons") nil 'prepend)
+  (set-fontset-font t 'unicode (font-spec :family "file-icons") nil 'prepend)
+  (set-fontset-font t 'unicode (font-spec :family "Material Icons") nil 'prepend)
+  (set-fontset-font t 'unicode (font-spec :family "github-octicons") nil 'prepend)
+  (set-fontset-font t 'unicode (font-spec :family "FontAwesome") nil 'prepend)
+  (set-fontset-font t 'unicode (font-spec :family "Weather Icons") nil 'prepend))
 
 (use-package all-the-icons-completion
   :ensure t
@@ -235,14 +236,10 @@
   (vertico-count 14)
   (vertico-resize nil)
   (vertico-cycle nil)
-  (vertico-multiform-categories
-   '((bookmark buffer)
-     (t reverse)))
   :init
   (require 'vertico-buffer)
   (fido-mode -1)
-  (vertico-mode)
-  (vertico-multiform-mode))
+  (vertico-mode))
 
 
 ;; Marginalia
@@ -264,11 +261,21 @@
   (corfu-max-width corfu-min-width)
   (corfu-count 14)
   (corfu-scroll-margin 4)
-  (corfu-auto nil)
+  (corfu-cycle t)
+  (corfu-auto t)
+  (corfu-auto-delay 60.0)
+  (corfu-separator ?\s)
   (corfu-quit-at-boundary nil)
+  (corfu-quit-no-match t)
+  (corfu-preview-current nil)
+  (corfu-preselect-first t)
+  (corfu-on-exact-match nil)
+  (corfu-echo-documentation nil)
 
   :config
   (global-corfu-mode))
+
+
 
 (use-package corfu-doc
   :ensure t
@@ -517,6 +524,8 @@
 (use-package go-ts-mode
   :ensure t
   :after (eglot tree-sitter-langs)
+  :custom
+  (go-ts-mode-indent-offset 2)
   :config
   (add-to-list 'eglot-server-programs `(go-ts-mode "gopls"))
   (add-hook 'go-ts-mode-hook #'eglot-ensure)
@@ -979,9 +988,9 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(bmkp-last-as-first-bookmark-file "/Users/bunnylushington/.emacs.d/bookmarks")
+ '(bmkp-last-as-first-bookmark-file "~/.emacs.d/bookmarks")
  '(package-selected-packages
-   '(org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
+   '(org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
