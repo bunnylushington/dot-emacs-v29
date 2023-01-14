@@ -462,31 +462,33 @@
 ;; HL
 (use-package hl-todo
   :ensure t
+  :bind
+  (:map hl-todo-mode-map
+        (("C-c o" . hl-todo-occur)
+         ("C-c i" . hl-todo-insert)))
   :config
   (global-hl-todo-mode 1)
-  (define-key hl-todo-mode-map (kbd "C-c o") #'hl-todo-occur)
-  (define-key hl-todo-mode-map (kbd "C-c i") #'hl-todo-insert))
 
-(defun ii/hl-todo-insert (keyword)
-  "Advice around hl-todo-insert"
-  (interactive
-   (list (completing-read
-          "Insert keyword: "
-          (cl-mapcan (pcase-lambda (`(,keyword . ,face))
-                       (and (equal (regexp-quote keyword) keyword)
-                            (list (propertize keyword 'face
-                                              (hl-todo--combine-face face)))))
-                     hl-todo-keyword-faces))))
-  (move-end-of-line nil)
-  (newline)
-  (indent-for-tab-command)
-  (insert (concat keyword ": "))
-  (back-to-indentation)
-  (set-mark-command nil)
-  (move-end-of-line nil)
-  (comment-dwim nil))
+  (defun ii/hl-todo-insert (keyword)
+    "Advice around hl-todo-insert"
+    (interactive
+     (list (completing-read
+            "Insert keyword: "
+            (cl-mapcan (pcase-lambda (`(,keyword . ,face))
+                         (and (equal (regexp-quote keyword) keyword)
+                              (list (propertize keyword 'face
+                                                (hl-todo--combine-face face)))))
+                       hl-todo-keyword-faces))))
+    (move-end-of-line nil)
+    (newline)
+    (indent-for-tab-command)
+    (insert (concat keyword ": "))
+    (back-to-indentation)
+    (set-mark-command nil)
+    (move-end-of-line nil)
+    (comment-dwim nil))
 
-(advice-add 'hl-todo-insert :override #'ii/hl-todo-insert)
+  (advice-add 'hl-todo-insert :override #'ii/hl-todo-insert))
 
 ;; yasnippet
 (use-package yasnippet
@@ -510,12 +512,10 @@
   (eldoc-echo-area-prefer-doc-buffer t))
 
 ;; Project
-(use-package project
-  :ensure t)
+(use-package project)
 
 ;; Eglot
-(use-package eglot
-  :ensure t)
+(use-package eglot)
 
 
 
@@ -693,6 +693,7 @@
 ;; RSS
 (use-package elfeed
   :ensure t
+  :disabled
   :config
   (setq
    elfeed-log-level 'info
@@ -771,12 +772,6 @@
   (push '(elixir-mode  . elixir) tree-sitter-major-mode-language-alist)
   (push '(go-ts-mode   . go) tree-sitter-major-mode-language-alist))
 
-
-
-
-
-
-
 (use-package sql
   :ensure t
   :mode "\\.eqlite\\'"
@@ -792,6 +787,13 @@
   :after outline-magic
   :config
   (define-key outline-minor-mode-map (kbd "<C-tab>") 'outline-cycle))
+
+(use-package auto-package-update
+  :ensure t
+  :config
+  (setq auto-package-update-delete-old-versions t)
+  (setq auto-package-update-hide-results t)
+  (auto-package-update-maybe))
 
 ;; Bookmark+ Configuration
 ;;
@@ -1042,7 +1044,7 @@
  ;; If there is more than one, they won't work right.
  '(bmkp-last-as-first-bookmark-file "~/.emacs.d/bookmarks")
  '(package-selected-packages
-   '(tree-sitter-langs treesit-langs corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
+   '(auto-package-update tree-sitter-langs treesit-langs corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
