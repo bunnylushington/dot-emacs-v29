@@ -11,6 +11,7 @@
       default-directory "~/"
       widget-image-enable nil
       tab-width 2
+      tab-always-indent 'complete
       calendar-latitude 29.9510
       calendar-longitude -90.0715)
 
@@ -172,12 +173,21 @@
     (rgrep pattern "*" directory)))
 
 ;; Grep Find Setup
-(grep-apply-setting
- 'grep-find-command
- '("rg -n -H --no-heading -e '' $(git rev-parse --show-toplevel || pwd)" . 27))
-(global-set-key (kbd "C-x C-g") 'grep-find)
+(use-package grep
+  :bind ("C-x C-g" . grep-find)
+  :config
+  (grep-apply-setting
+   'grep-find-command
+   '("rg -n -H --no-heading -e '' $(git rev-parse --show-toplevel || pwd)" . 27)))
+
+
+(use-package deadgrep
+  :ensure t
+  :bind ("H-g" . deadgrep))
 
 ;; Convenience Key Bindings
+(global-set-key (kbd "M-C-<down>") 'scroll-other-window)
+(global-set-key (kbd "M-C-<up>") 'scroll-other-window-down)
 (global-set-key (kbd "s-w") 'delete-frame)
 (global-set-key (kbd "s-q") 'shortdoc-display-group)
 (global-set-key (kbd "C-+") 'text-scale-increase)
@@ -223,12 +233,12 @@
 (use-package vertico
   :ensure t
   :bind (:map vertico-map
-              (("<backspace>" . vertico-directory-delete-char)
-               ("C-w" . vertico-directory-delete-word)
+              (("<backspace>"   . vertico-directory-delete-char)
+               ("C-w"           . vertico-directory-delete-word)
                ("C-<backspace>" . vertico-directory-delete-word)
-               ("<return>" . vertico-directory-enter)))
+               ("<return>"      . vertico-directory-enter)))
   :hook
-  ((minibuffer-setup . vertico-repeat-save)
+  ((minibuffer-setup           . vertico-repeat-save)
    (rfn-eshadow-update-overlay . vertico-directory-tidy))
   :custom
   (vertico-count 14)
@@ -249,11 +259,10 @@
 ;; Corfu
 ;;
 ;; see https://github.com/minad/corfu
-(setq tab-always-indent 'complete
-      completion-cycle-threshold 3)
 
 (use-package corfu
   :ensure t
+;  :bind (("C-<tab>" . completion-at-point))
   :custom
   (corfu-min-width 80)
   (corfu-max-width corfu-min-width)
@@ -261,33 +270,30 @@
   (corfu-scroll-margin 4)
   (corfu-cycle t)
   (corfu-auto t)
-  (corfu-auto-delay 60.0)
+  (corfu-auto-delay 1.0)
   (corfu-separator ?\s)
   (corfu-quit-at-boundary nil)
   (corfu-quit-no-match t)
   (corfu-preview-current nil)
   (corfu-preselect-first t)
-  (corfu-on-exact-match nil)
+  (corfu-on-exact-match t)
   (corfu-echo-documentation nil)
 
   :config
   (global-corfu-mode))
 
-
-
-(use-package corfu-doc
-  :ensure t
-  :after corfu
-  :hook (corfu-mode . corfu-doc-mode)
-  :bind (:map corfu-map
-         (([remap corfu-show-documentation] . corfu-doc-toggle)
-          ("M-n" . corfu-doc-scroll-up)
-          ("M-p" . corfu-doc-scroll-down)))
+(use-package corfu-popupinfo
   :custom
-  (corfu-doc-delay 0.5)
-  (corfu-doc-max-width 90)
-  (corfu-doc-max-height 20)
-  (corfu-echo-documentation nil))
+  (corfu-popupinfo-min-width 40)
+  (corfu-popupinfo-max-width 90)
+  (corfu-popupinfo-min-height 2)
+  (corfu-popupinfo-delay t)
+  (corfu-popupinfo-hide t)
+  :bind
+  (("M-n" . corfu-popupinfo-scroll-up)
+   ("M-p" . corfu-popupinfo-scroll-down))
+    :config
+  (corfu-popupinfo-mode))
 
 (use-package kind-icon
   :if (display-graphic-p)
@@ -502,7 +508,9 @@
 
 ;; ElDoc
 (use-package eldoc
-  :ensure t)
+  :ensure t
+  :custom
+  (eldoc-echo-area-prefer-doc-buffer t))
 
 ;; Project
 (use-package project
@@ -511,6 +519,8 @@
 ;; Eglot
 (use-package eglot
   :ensure t)
+
+
 
 ;; Go
 ;;
@@ -525,6 +535,13 @@
   :custom
   (go-ts-mode-indent-offset 2)
   :config
+
+  ;; elixir and elixir-ts modes
+  (let ((elixir-ls (ii/emacs-dir-file "elixir-ls/release/language_server.sh")))
+    (add-to-list 'eglot-server-programs `(elixir-ts-mode ,elixir-ls))
+    (add-to-list 'eglot-server-programs `(elixir-mode ,elixir-ls)))
+
+  ;; go and go-ts modes
   (add-to-list 'eglot-server-programs `(go-ts-mode "gopls"))
   (add-hook 'go-ts-mode-hook #'eglot-ensure)
   (add-hook 'go-ts-mode-hook #'tree-sitter-hl-mode)
@@ -574,6 +591,11 @@
     "Change the Erlang indentation level."
     (interactive "nIndention Level: ")
     (set-variable 'erlang-indent-level spaces t)))
+
+;; Elixir
+(use-package elixir-mode
+  :ensure t
+  :hook (elixir-mode . eglot-ensure))
 
 ;; Hydra
 (use-package hydra
@@ -988,7 +1010,7 @@
  ;; If there is more than one, they won't work right.
  '(bmkp-last-as-first-bookmark-file "~/.emacs.d/bookmarks")
  '(package-selected-packages
-   '(org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
+   '(corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
