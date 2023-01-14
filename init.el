@@ -536,11 +536,6 @@
   (go-ts-mode-indent-offset 2)
   :config
 
-  ;; elixir and elixir-ts modes
-  (let ((elixir-ls (ii/emacs-dir-file "elixir-ls/release/language_server.sh")))
-    (add-to-list 'eglot-server-programs `(elixir-ts-mode ,elixir-ls))
-    (add-to-list 'eglot-server-programs `(elixir-mode ,elixir-ls)))
-
   ;; go and go-ts modes
   (add-to-list 'eglot-server-programs `(go-ts-mode "gopls"))
   (add-hook 'go-ts-mode-hook #'eglot-ensure)
@@ -595,6 +590,10 @@
 ;; Elixir
 (use-package elixir-mode
   :ensure t
+  :config
+  (let ((elixir-ls (ii/emacs-dir-file "elixir-ls/release/language_server.sh")))
+    (add-to-list 'eglot-server-programs `(elixir-ts-mode ,elixir-ls))
+    (add-to-list 'eglot-server-programs `(elixir-mode ,elixir-ls)))
   :hook (elixir-mode . eglot-ensure))
 
 ;; Hydra
@@ -768,7 +767,12 @@
        (f-entries grammar-dir))))
 
   (ii/tree-sitter-fixup-grammars)
-  (push '(go-ts-mode . go) tree-sitter-major-mode-language-alist))
+  (push '(yaml-ts-mode . yaml) tree-sitter-major-mode-language-alist)
+  (push '(json-ts-mode . json) tree-sitter-major-mode-language-alist)
+  (push '(erlang-mode  . erlang) tree-sitter-major-mode-language-alist)
+  (push '(cperl-mode   . perl) tree-sitter-major-mode-language-alist)
+  (push '(elixir-mode  . elixir) tree-sitter-major-mode-language-alist)
+  (push '(go-ts-mode   . go) tree-sitter-major-mode-language-alist))
 
 
 
