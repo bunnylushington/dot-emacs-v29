@@ -262,7 +262,6 @@
 
 (use-package corfu
   :ensure t
-                                        ;  :bind (("C-<tab>" . completion-at-point))
   :custom
   (corfu-min-width 80)
   (corfu-max-width corfu-min-width)
@@ -278,7 +277,6 @@
   (corfu-preselect-first t)
   (corfu-on-exact-match t)
   (corfu-echo-documentation nil)
-
   :config
   (global-corfu-mode))
 
@@ -348,6 +346,7 @@
 ;;   :ensure t
 ;;   :after magit)
 
+
 ;; Show (and act on) changed hunks.
 (use-package git-gutter
   :ensure t
@@ -361,6 +360,9 @@
 ;; vterm
 (use-package vterm
   :ensure t
+  :bind
+  ((:map vterm-mode-map ("s-c" . vterm-copy-mode))
+   (:map vterm-copy-mode-map ("s-c" . vterm-copy-mode)))
   :config
   (add-to-list 'vterm-eval-cmds
                '("update-pwd" (lambda (path) (setq default-directory path))))
@@ -371,16 +373,11 @@
         vterm-environment '("'(\"emacs-vterm=true\")'")
         vterm-max-scrollback 10000))
 
-                                        ; (global-set-key (kbd "s-n") 'vterm)
-(define-key vterm-mode-map (kbd "s-c") 'vterm-copy-mode)
-(define-key vterm-copy-mode-map (kbd "s-c") 'vterm-copy-mode)
-
 (use-package multi-vterm
   :ensure t
   :bind (("s-n" . multi-vterm)
          ("s-," . multi-vterm-prev)
          ("s-." . multi-vterm-next)))
-
 
 ;; Quick Buffer Switch
 ;;
