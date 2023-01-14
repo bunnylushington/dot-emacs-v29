@@ -262,7 +262,7 @@
 
 (use-package corfu
   :ensure t
-;  :bind (("C-<tab>" . completion-at-point))
+                                        ;  :bind (("C-<tab>" . completion-at-point))
   :custom
   (corfu-min-width 80)
   (corfu-max-width corfu-min-width)
@@ -292,7 +292,7 @@
   :bind
   (("M-n" . corfu-popupinfo-scroll-up)
    ("M-p" . corfu-popupinfo-scroll-down))
-    :config
+  :config
   (corfu-popupinfo-mode))
 
 (use-package kind-icon
@@ -371,7 +371,7 @@
         vterm-environment '("'(\"emacs-vterm=true\")'")
         vterm-max-scrollback 10000))
 
-; (global-set-key (kbd "s-n") 'vterm)
+                                        ; (global-set-key (kbd "s-n") 'vterm)
 (define-key vterm-mode-map (kbd "s-c") 'vterm-copy-mode)
 (define-key vterm-copy-mode-map (kbd "s-c") 'vterm-copy-mode)
 
@@ -531,7 +531,7 @@
 ;;   ln -s ~/go/bin/gopls ~/.local/bin
 (use-package go-ts-mode
   :ensure t
-  :after (eglot tree-sitter-langs)
+  :after (treesit-langs eglot)
   :custom
   (go-ts-mode-indent-offset 2)
   :config
@@ -739,11 +739,42 @@
                       :foreground "MistyRose4")
   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
 
+
+;; There some weirdness here.  You'd *expect* that the shared objects
+;; would be named correctly (and installed in a reasonable path) but I
+;; don't think that's the case.  After we install the grammars, let's
+;; fix up the load-path and make some symlinks.
 (use-package tree-sitter-langs
   :ensure t
   :after tree-sitter
   :config
+  (tree-sitter-langs-install-grammars)
+
+  (defun ii/tree-sitter-fixup-grammars ()
+    "Prepare tree-sitter-langs for actual use."
+    (interactive)
+    (require 'f)
+    (let ((grammar-dir (concat tree-sitter-langs-grammar-dir "bin")))
+      (add-to-list 'treesit-extra-load-path grammar-dir)
+      (mapc
+       (lambda (f)
+         (if (and (s-ends-with-p ".dylib" f)
+                  (not (s-contains-p "libtree-sitter-" f)))
+             (let* ((f-name (file-name-nondirectory f))
+                    (link-name (concat "libtree-sitter-" f-name))
+                    (link-path (f-join (file-name-directory f) link-name)))
+               (f-delete link-path t)
+               (f-copy f link-path))))
+       (f-entries grammar-dir))))
+
+  (ii/tree-sitter-fixup-grammars)
   (push '(go-ts-mode . go) tree-sitter-major-mode-language-alist))
+
+
+
+
+
+
 
 (use-package sql
   :ensure t
@@ -977,19 +1008,19 @@
     (flet ((link (label url)
                  (if (use-region-p) (delete-region start end))
                  (insert (format "[%s](%s) " label url))))
-          ;; no region specified
-          (if (not (use-region-p))
-              (let ((url (read-from-minibuffer "URL: "))
-                    (label (read-from-minibuffer "Label: ")))
-                (link label url))
-            (let ((text (buffer-substring-no-properties start end)))
-              ;; the region is an HTTP url
-              (if (string= (substring text 0 4) "http")
-                  (let ((label (read-from-minibuffer "Label: ")))
-                    (link label text))
-                ;; the region is the label
-                (let ((url (read-from-minibuffer "URL: ")))
-                  (link text url)))))))
+      ;; no region specified
+      (if (not (use-region-p))
+          (let ((url (read-from-minibuffer "URL: "))
+                (label (read-from-minibuffer "Label: ")))
+            (link label url))
+        (let ((text (buffer-substring-no-properties start end)))
+          ;; the region is an HTTP url
+          (if (string= (substring text 0 4) "http")
+              (let ((label (read-from-minibuffer "Label: ")))
+                (link label text))
+            ;; the region is the label
+            (let ((url (read-from-minibuffer "URL: ")))
+              (link text url)))))))
 
   (define-key lui-mode-map (kbd "M-k") 'ii/lui-add-link))
 ;; End of Slack configuration
@@ -1010,7 +1041,7 @@
  ;; If there is more than one, they won't work right.
  '(bmkp-last-as-first-bookmark-file "~/.emacs.d/bookmarks")
  '(package-selected-packages
-   '(corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
+   '(tree-sitter-langs treesit-langs corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
