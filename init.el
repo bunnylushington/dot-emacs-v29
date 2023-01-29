@@ -11,7 +11,7 @@
       default-directory "~/"
       widget-image-enable nil
       tab-width 2
-      tab-always-indent 'complete
+;      tab-always-indent 'complete
       calendar-latitude 29.9510
       calendar-longitude -90.0715)
 
@@ -42,9 +42,11 @@
 ;; Archives
 (setq package-archives
       '(("gnu" . "https://elpa.gnu.org/packages/")
+        ("nongnu" . "https://elpa.nongnu.org/nongnu/")
         ("MELPA" . "https://melpa.org/packages/"))
       package-archive-priorities
       '(("MELPA" . 5)
+        ("nongnu" . 10)
         ("gnu" . 0)))
 
 ;; Expansion
@@ -192,7 +194,6 @@
 (global-set-key (kbd "s-q") 'shortdoc-display-group)
 (global-set-key (kbd "C-+") 'text-scale-increase)
 (global-set-key (kbd "C--") 'text-scale-decrease)
-(global-set-key (kbd "s-l") 'list-matching-lines)
 (global-set-key (kbd "s-u") 'uuidgen)
 (define-key isearch-mode-map (kbd "C-o") 'isearch-occur)
 (global-set-key (kbd "s-d") 'osx-dictionary-search-input)
@@ -269,7 +270,7 @@
   (corfu-scroll-margin 4)
   (corfu-cycle t)
   (corfu-auto t)
-  (corfu-auto-delay 1.0)
+  (corfu-auto-delay 0.0)
   (corfu-separator ?\s)
   (corfu-quit-at-boundary nil)
   (corfu-quit-no-match t)
@@ -316,9 +317,9 @@
          ("C-c m" . consult-mode-command)
          ("M-y" . consult-yank-pop)))
 
-(use-package consult-eglot
-  :ensure t
-  :bind ("H-s" . consult-eglot-symbols))
+;; (use-package consult-eglot
+;;   :ensure t
+;;   :bind ("H-s" . consult-eglot-symbols))
 
 ;; Orderless
 (use-package orderless
@@ -514,9 +515,38 @@
 ;; Project
 (use-package project)
 
-;; Eglot
-(use-package eglot)
+;; ;; Eglot
+;; (use-package eglot)
 
+;; LSP-Mode
+(use-package lsp-mode
+  :ensure t
+  :init
+  (setq lsp-keymap-prefix "s-l")
+  (defun ii/lsp-mode-setup-completion()
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(orderless)))
+  :hook ((go-mode . lsp)
+         (go-ts-mode . lsp)
+         (elixir-mode . lsp)
+         (python-mode . lsp)
+         (lsp-completion-mode . ii/lsp-mode-setup-completion))
+  :custom
+  (lsp-completion-provider :none)
+  (lsp-modeline-diagnostics-enable nil)
+  :config
+  (lsp-register-custom-settings
+   '(("gopls.completeUnimported" t t)
+     ("gopls.staticcheck" t t)))
+  :commands lsp)
+
+(use-package lsp-ui
+  :ensure t
+  :custom
+  (lsp-ui-peek-enable t))
+
+(use-package flycheck
+  :ensure t)
 
 
 ;; Go
@@ -528,21 +558,15 @@
 ;;   ln -s ~/go/bin/gopls ~/.local/bin
 (use-package go-ts-mode
   :ensure t
-  :after (treesit-langs eglot)
+  :after (treesit-langs lsp-mode)
+  :config
+  (defun ii/lsp-go-save-hooks ()
+    (add-hook 'before-save-hook #'lsp-format-buffer t t)
+    (add-hook 'before-save-hook #'lsp-organize-imports t t))
   :custom
   (go-ts-mode-indent-offset 2)
-  :config
-
-  ;; go and go-ts modes
-  (add-to-list 'eglot-server-programs `(go-ts-mode "gopls"))
-  (add-hook 'go-ts-mode-hook #'eglot-ensure)
-  (add-hook 'go-ts-mode-hook #'tree-sitter-hl-mode)
-  (defun ii/eglot-organize-imports ()
-    (call-interactively 'eglot-code-action-organize-imports))
-  (defun ii/before-saving-go ()
-    (add-hook 'before-save-hook #'eglot-format-buffer nil t)
-    (add-hook 'before-save-hook #'ii/eglot-organize-imports nil t))
-  (add-hook 'go-ts-mode-hook #'ii/before-saving-go))
+  :hook ((go-mode . tree-sitter-hl-mode)
+         (go-mode . ii/lsp-go-save-hooks)))
 
 ;; Go REPL
 ;;
@@ -586,12 +610,12 @@
 
 ;; Elixir
 (use-package elixir-mode
-  :ensure t
-  :config
-  (let ((elixir-ls (ii/emacs-dir-file "elixir-ls/release/language_server.sh")))
-    (add-to-list 'eglot-server-programs `(elixir-ts-mode ,elixir-ls))
-    (add-to-list 'eglot-server-programs `(elixir-mode ,elixir-ls)))
-  :hook (elixir-mode . eglot-ensure))
+  :ensure t)
+  ;; :config
+  ;; (let ((elixir-ls (ii/emacs-dir-file "elixir-ls/release/language_server.sh")))
+  ;;   (add-to-list 'eglot-server-programs `(elixir-ts-mode ,elixir-ls))
+  ;;   (add-to-list 'eglot-server-programs `(elixir-mode ,elixir-ls)))
+  ;; :hook (elixir-mode . eglot-ensure))
 
 ;; Hydra
 (use-package hydra
@@ -634,7 +658,9 @@
 ;; Note that a submenu can be realized with ?
 (use-package ace-window
   :ensure t
-  :bind ("M-o" . ace-window))
+  :bind (("M-o" . ace-window)
+         ("C-x o" . ace-window)
+         ("s-o" . ace-window)))
 
 (defun ii/split-below (arg)
   "Split window below from the parent or from root with ARG."
@@ -1044,11 +1070,12 @@
  ;; If there is more than one, they won't work right.
  '(bmkp-last-as-first-bookmark-file "~/.emacs.d/bookmarks")
  '(package-selected-packages
-   '(auto-package-update tree-sitter-langs treesit-langs corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
+   '(eat emacs-eat flycheck lsp-ui auto-package-update tree-sitter-langs treesit-langs corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(aw-leading-char-face ((t (:foreground "red" :height 2.0))))
  '(variable-pitch ((t (:background "#2E3440" :foreground "#ECEFF4" :height 140 :family "Avenir Book")))))
 (put 'downcase-region 'disabled nil)
