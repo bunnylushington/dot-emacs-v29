@@ -21,6 +21,7 @@
 (global-goto-address-mode)
 (prefer-coding-system 'utf-8)
 (set-language-environment "UTF-8")
+(desktop-save-mode 1)
 
 ;; Functions to help load path construction.
 (defun ii/emacs-dir-file (file)
@@ -197,6 +198,13 @@
 (global-set-key (kbd "s-u") 'uuidgen)
 (define-key isearch-mode-map (kbd "C-o") 'isearch-occur)
 (global-set-key (kbd "s-d") 'osx-dictionary-search-input)
+
+;; Window resizing
+(global-set-key (kbd "s-<left>") 'shrink-window-horizontally)
+(global-set-key (kbd "s-<right>") 'enlarge-window-horizontally)
+(global-set-key (kbd "s-<down>") 'shrink-window)
+(global-set-key (kbd "s-<up>") 'enlarge-window)
+
 
 ;; Backup
 (setq vc-make-backup-files t)
@@ -410,7 +418,7 @@
   :ensure t
   :config
   (setq whitespace-style '(trailing tabs))
-  (global-shitespace-mode t)
+  (global-whitespace-mode t)
   :hook (before-save . delete-trailing-whitespace))
 
 ;; Detached
@@ -426,6 +434,7 @@
          ([remap recompile] . detached-compile-recompile)
          ;; Replace built in completion of sessions with `consult'
          ([remap detached-open-session] . detached-consult-session)
+         (:map detached-vterm-mode-map ("C-<return>" . ace-window))
          ("s-z" . detached-list-sessions))
   :custom ((detached-show-output-on-attach t)
            (detached-terminal-data-command system-type)))
@@ -538,6 +547,7 @@
   (lsp-register-custom-settings
    '(("gopls.completeUnimported" t t)
      ("gopls.staticcheck" t t)))
+  (setq lsp-headerline-breadcrumb-enable nil)
   :commands lsp)
 
 (use-package lsp-ui
@@ -658,9 +668,10 @@
 ;; Note that a submenu can be realized with ?
 (use-package ace-window
   :ensure t
+  :custom
+  (aw-keys '(49 50 51 52 53 54 55 56 57))
   :bind (("M-o" . ace-window)
-         ("C-x o" . ace-window)
-         ("s-o" . ace-window)))
+         ("C-<return>" . ace-window)))
 
 (defun ii/split-below (arg)
   "Split window below from the parent or from root with ARG."
@@ -767,6 +778,12 @@
 ;; would be named correctly (and installed in a reasonable path) but I
 ;; don't think that's the case.  After we install the grammars, let's
 ;; fix up the load-path and make some symlinks.
+
+;; Obviously this is just a mess.  It turns out that when the grammars
+;; are updated things go wonky.  I've had some success deleting the
+;; elpa/tree-sitter-langs... directory and restarting emacs (twice).
+;; Fixing all this up remains a low-key todo.
+
 (use-package tree-sitter-langs
   :ensure t
   :after tree-sitter
@@ -1054,13 +1071,96 @@
   (define-key lui-mode-map (kbd "M-k") 'ii/lui-add-link))
 ;; End of Slack configuration
 
+;; org-mode configuation
+(use-package org-journal
+  :ensure t
+  :config
+  (setq
+   org-journal-carryover-items nil
+   org-journal-dir "~/CloudDocs/journal/"
+   org-journal-file-type 'weekly
+   org-journal-file-format "%Y/%m-%d"
+   org-journal-start-on-weekday 7))
+
+(global-set-key (kbd "C-c l") 'org-store-link)
+(global-set-key (kbd "C-c a") 'org-agenda)
+(global-set-key (kbd "C-c c") 'org-capture)
+(global-set-key (kbd "C-c i") 'org-journal-new-entry)
+(global-set-key (kbd "C-c o") 'org-clock-out)
+(global-set-key (kbd "C-c j") 'org-journal-open-current-journal-file)
+(global-set-key (kbd "C-c C-i") 'org-clock-goto)
+
+(defun current-line-empty-p ()
+  (save-excursion
+    (beginning-of-line)
+    (looking-at-p "[[:blank:]]*$")))
+
+(defun ii/clockreport ()
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (if (not (current-line-empty-p))
+        (progn
+          (insert "\n")
+          (goto-char (point-min))))
+    (org-clock-report 1)))
+
+(define-key org-mode-map (kbd "C-c C-q") 'bury-buffer)
+(define-key org-mode-map (kbd "C-c C-r") 'ii/clockreport)
+
+;; C-c C-x C-j: open last clocked task
+
+(add-hook 'org-journal-after-entry-create-hook 'org-clock-in)
+(add-hook 'ii/clockreport 'org-clock-out-hook)
 
 ;; These things seem to be affected by nano...?
-(setq completion-styles '(orderless)
-      completion-category-defaults nil
-      completion-category-overrides '((file (styles partial-completion))))
+(setq
+ mac-use-title-bar t
+ initial-major-mode 'elisp-lisp-mode
+ completion-styles '(orderless)
+ completion-category-defaults nil
+ completion-category-overrides '((file (styles partial-completion))))
 
-(setq initial-major-mode 'emacs-lisp-mode)
+(setq-default tab-width 2)
+
+;; A function to find UUIDs
+
+(defvar ii/uuid-regexp
+  "[a-f0-9]\\{8\\}-[a-f0-9]\\{4\\}-[a-f0-9]\\{4\\}-[a-f0-9]\\{4\\}-[a-f0-9]\\{12\\}")
+
+(defun ii/pick-uuid ()
+  (interactive)
+  (let ((matches (make-hash-table))
+        (marker-list (cl-loop for i from ?a to ?z collect i)))
+    (cl-flet ((pop-marker () (let ((the-marker (car marker-list)))
+                            (setq marker-list (cdr marker-list))
+                            the-marker)))
+      (save-excursion
+          (move-to-window-line 0)
+      (while (re-search-forward ii/uuid-regexp nil t)
+        (let* ((start (car (match-data t)))
+               (end (nth 1 (match-data t)))
+               (marker-tag (pop-marker))
+               (marker-ol (make-overlay start end))
+               (font-ol (make-overlay start end)))
+          (overlay-put font-ol 'face '(foreground-color . "#008b8b"))
+          (overlay-put marker-ol 'before-string
+                       (propertize (format "%c " marker-tag)
+                                   'face '(foreground-color . "#90ee90")))
+          (puthash marker-tag (list (match-string 0) font-ol marker-ol) matches)))))
+    (let* ((index (read-key "UUID: "))
+           (match (gethash index matches nil)))
+      (if match
+          (insert (car match))
+        (message "Invalid UUID index (%s)." index)))
+    (maphash (lambda (k v)
+               (delete-overlay (nth 1 v))
+               (delete-overlay (nth 2 v))) matches)))
+
+(global-set-key (kbd "s-u") 'ii/pick-uuid)
+
+
+
 
 
 (custom-set-variables
@@ -1068,14 +1168,105 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(aw-keys '(49 50 51 52 53 54 55 56 57) nil nil "Customized with use-package ace-window")
  '(bmkp-last-as-first-bookmark-file "~/.emacs.d/bookmarks")
+ '(connection-local-criteria-alist
+   '(((:application tramp :machine "localhost")
+      tramp-connection-local-darwin-ps-profile)
+     ((:application tramp :machine "montuoke-2.attlocal.net")
+      tramp-connection-local-darwin-ps-profile)
+     ((:application tramp)
+      tramp-connection-local-default-system-profile tramp-connection-local-default-shell-profile)
+     ((:application eshell)
+      eshell-connection-default-profile)))
+ '(connection-local-profile-alist
+   '((tramp-connection-local-darwin-ps-profile
+      (tramp-process-attributes-ps-args "-acxww" "-o" "pid,uid,user,gid,comm=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" "-o" "state=abcde" "-o" "ppid,pgid,sess,tty,tpgid,minflt,majflt,time,pri,nice,vsz,rss,etime,pcpu,pmem,args")
+      (tramp-process-attributes-ps-format
+       (pid . number)
+       (euid . number)
+       (user . string)
+       (egid . number)
+       (comm . 52)
+       (state . 5)
+       (ppid . number)
+       (pgrp . number)
+       (sess . number)
+       (ttname . string)
+       (tpgid . number)
+       (minflt . number)
+       (majflt . number)
+       (time . tramp-ps-time)
+       (pri . number)
+       (nice . number)
+       (vsize . number)
+       (rss . number)
+       (etime . tramp-ps-time)
+       (pcpu . number)
+       (pmem . number)
+       (args)))
+     (tramp-connection-local-busybox-ps-profile
+      (tramp-process-attributes-ps-args "-o" "pid,user,group,comm=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" "-o" "stat=abcde" "-o" "ppid,pgid,tty,time,nice,etime,args")
+      (tramp-process-attributes-ps-format
+       (pid . number)
+       (user . string)
+       (group . string)
+       (comm . 52)
+       (state . 5)
+       (ppid . number)
+       (pgrp . number)
+       (ttname . string)
+       (time . tramp-ps-time)
+       (nice . number)
+       (etime . tramp-ps-time)
+       (args)))
+     (tramp-connection-local-bsd-ps-profile
+      (tramp-process-attributes-ps-args "-acxww" "-o" "pid,euid,user,egid,egroup,comm=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" "-o" "state,ppid,pgid,sid,tty,tpgid,minflt,majflt,time,pri,nice,vsz,rss,etimes,pcpu,pmem,args")
+      (tramp-process-attributes-ps-format
+       (pid . number)
+       (euid . number)
+       (user . string)
+       (egid . number)
+       (group . string)
+       (comm . 52)
+       (state . string)
+       (ppid . number)
+       (pgrp . number)
+       (sess . number)
+       (ttname . string)
+       (tpgid . number)
+       (minflt . number)
+       (majflt . number)
+       (time . tramp-ps-time)
+       (pri . number)
+       (nice . number)
+       (vsize . number)
+       (rss . number)
+       (etime . number)
+       (pcpu . number)
+       (pmem . number)
+       (args)))
+     (tramp-connection-local-default-shell-profile
+      (shell-file-name . "/bin/sh")
+      (shell-command-switch . "-c"))
+     (tramp-connection-local-default-system-profile
+      (path-separator . ":")
+      (null-device . "/dev/null"))
+     (eshell-connection-default-profile
+      (eshell-path-env-list))))
+ '(eat-eshell-mode t)
+ '(go-ts-mode-indent-offset 2)
+ '(isearch-lazy-highlight 'all-windows)
+ '(mouse-wheel-progressive-speed nil)
  '(package-selected-packages
-   '(eat emacs-eat flycheck lsp-ui auto-package-update tree-sitter-langs treesit-langs corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
+   '(org-journal treesit-auto eat emacs-eat flycheck lsp-ui auto-package-update tree-sitter-langs treesit-langs corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(aw-leading-char-face ((t (:foreground "red" :height 2.0))))
+ '(isearch ((t (:foreground "black" :background "plum1" :inherit nano-face-strong))))
+ '(lazy-highlight ((t (:foreground "black" :background "indian red" :inherit nano-face-subtle))))
  '(variable-pitch ((t (:background "#2E3440" :foreground "#ECEFF4" :height 140 :family "Avenir Book")))))
 (put 'downcase-region 'disabled nil)
