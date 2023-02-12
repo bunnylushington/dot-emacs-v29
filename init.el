@@ -278,7 +278,7 @@
   (corfu-scroll-margin 4)
   (corfu-cycle t)
   (corfu-auto t)
-  (corfu-auto-delay 0.0)
+  (corfu-auto-delay 0.3)
   (corfu-separator ?\s)
   (corfu-quit-at-boundary nil)
   (corfu-quit-no-match t)
@@ -341,6 +341,7 @@
 ;; Magit
 (use-package magit
   :ensure t
+  :demand t
   :bind (("s-g" . 'magit-status))
   :hook (before-save . magit-wip-commit-initial-backup)
   :config
@@ -388,6 +389,8 @@
          ("s-," . multi-vterm-prev)
          ("s-." . multi-vterm-next)))
 
+
+
 ;; Quick Buffer Switch
 ;;
 ;; Don't forget how useful C-x C-c C-/ is.
@@ -408,6 +411,10 @@
     :name 'sql
     :shortcut "C-s"
     :test '(when (eq major-mode 'sql-mode) qbs:buffer-name))
+   (make-qbs:predicate
+    :name 'eshell
+    :shortcut "C-c"
+    :test '(when (eq major-mode 'eshell-mode) qbs:buffer-name))
    (make-qbs:predicate
     :name 'vterm
     :shortcut "C-v"
@@ -838,6 +845,12 @@
   (setq auto-package-update-hide-results t)
   (auto-package-update-maybe))
 
+(use-package ace-kill
+  :load-path "~/.emacs.d/ace-kill"
+  :bind ("s-u" . ace-kill-hydra/body))
+
+
+
 ;; Bookmark+ Configuration
 ;;
 ;; Only loads if bookmark+ has been cloned to
@@ -1123,44 +1136,103 @@
 
 (setq-default tab-width 2)
 
-;; A function to find UUIDs
+(defun ii/print-hash-table (h)
+  "String representation of a hash table H"
+  (maphash (lambda (k v)
+             (insert (format "%s: %s\n" k v))) h))
 
-(defvar ii/uuid-regexp
-  "[a-f0-9]\\{8\\}-[a-f0-9]\\{4\\}-[a-f0-9]\\{4\\}-[a-f0-9]\\{4\\}-[a-f0-9]\\{12\\}")
+(use-package eshell-vterm
+  :ensure t
+  :demand t
+  :after eshell
+  :config
+  (eshell-vterm-mode))
 
-(defun ii/pick-uuid ()
+(use-package eshell-fringe-status
+  :ensure t
+  :config
+  (add-hook 'eshell-mode-hook 'eshell-fringe-status-mode))
+
+;; Eshell prompt configuration.
+(defface ii/eshell-branch-face
+  '((t (:foreground "#008b8b")))
+  "Git branch face.")
+
+(defface ii/eshell-untracked-face
+  '((t (:foreground "#fff68f")))
+  "Git untracked file marker face.")
+
+(defface ii/eshell-changed-face
+  '((t (:foreground "#fff68f")))
+  "Git modified file marker face.")
+
+(defface ii/eshell-project-face
+  '((t (:foreground "#008b8b")))
+  "Project name face.")
+
+(defface ii/eshell-project-path-face
+  '((t (:foreground "#90ee90")))
+  "Partial path face.")
+
+(defvar ii/shell-arrow "❯")
+(defvar ii/shell-middot "·")
+
+(setq eshell-prompt-function #'ii/eshell-custom-prompt)
+(setq eshell-prompt-regexp
+      (concat "^[^#$" ii/shell-arrow "]* [$#" ii/shell-arrow "] "))
+
+(defun ii/eshell-custom-prompt ()
   (interactive)
-  (let ((matches (make-hash-table))
-        (marker-list (cl-loop for i from ?a to ?z collect i)))
-    (cl-flet ((pop-marker () (let ((the-marker (car marker-list)))
-                            (setq marker-list (cdr marker-list))
-                            the-marker)))
-      (save-excursion
-          (move-to-window-line 0)
-      (while (re-search-forward ii/uuid-regexp nil t)
-        (let* ((start (car (match-data t)))
-               (end (nth 1 (match-data t)))
-               (marker-tag (pop-marker))
-               (marker-ol (make-overlay start end))
-               (font-ol (make-overlay start end)))
-          (overlay-put font-ol 'face '(foreground-color . "#008b8b"))
-          (overlay-put marker-ol 'before-string
-                       (propertize (format "%c " marker-tag)
-                                   'face '(foreground-color . "#90ee90")))
-          (puthash marker-tag (list (match-string 0) font-ol marker-ol) matches)))))
-    (let* ((index (read-key "UUID: "))
-           (match (gethash index matches nil)))
-      (if match
-          (insert (car match))
-        (message "Invalid UUID index (%s)." index)))
-    (maphash (lambda (k v)
-               (delete-overlay (nth 1 v))
-               (delete-overlay (nth 2 v))) matches)))
+  (let ((prj-current (project-current nil)))
+    (if prj-current
+        (ii/eshell-custom-prompt-project prj-current)
+      (ii/eshell-custom-prompt-no-project))))
 
-(global-set-key (kbd "s-u") 'ii/pick-uuid)
+(defun ii/eshell-custom-prompt-project (prj)
+  (interactive)
+  (let* ((prj-directory (project-root prj))
+         (prj-name (project-name prj))
+         (short-dir (abbreviate-file-name (eshell/pwd)))
+         (git-untracked (magit-untracked-files))
+         (git-branch (magit-get-current-branch))
+         (git-changed (magit-git-lines "diff" "--name-status"))
+         (git-untracked-marker (if git-untracked " Ø" ""))
+         (git-changed-marker (if git-changed " ∆" "")))
+    (concat
+     "\n"
+     (propertize short-dir 'face 'nano-face-faded)
+     " "
+     (propertize git-branch 'face 'ii/eshell-branch-face)
+     (propertize git-untracked-marker 'face 'ii/eshell-untracked-face)
+     (propertize git-changed-marker 'face 'ii/eshell-changed-face)
+     "\n"
+     (ii/directory-with-project prj-directory prj-name (eshell/pwd))
+     " "
+     (propertize ii/shell-arrow 'face 'nano-face-faded)
+     " ")))
 
+(defun ii/eshell-custom-prompt-no-project ()
+  (interactive)
+  (concat (abbreviate-file-name (eshell/pwd))
+          (if (= (user-uid) 0)
+              " # "
+            (concat " " ii/shell-arrow " "))))
 
+(defun ii/directory-with-project (prj-directory prj-name pwd)
+  ;; show the path relative to the project root
+  (let* ((current-dir
+          (if (s-starts-with-p "~" prj-directory)
+              (abbreviate-file-name pwd) pwd))
+         (dir-path
+          (s-chop-prefix (s-chop-suffix "/" prj-directory)
+                         current-dir))
+         (dir (if (= (length dir-path) 0) "/" dir-path)))
+    (concat
+     (propertize prj-name 'face 'ii/eshell-project-face)
+     " " (propertize ii/shell-middot 'face 'nano-face-faded)  " "
+     (propertize dir 'face 'ii/eshell-project-path-face))))
 
+;; End of Eshell prompt configuration
 
 
 (custom-set-variables
@@ -1168,7 +1240,6 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(aw-keys '(49 50 51 52 53 54 55 56 57) nil nil "Customized with use-package ace-window")
  '(bmkp-last-as-first-bookmark-file "~/.emacs.d/bookmarks")
  '(connection-local-criteria-alist
    '(((:application tramp :machine "localhost")
@@ -1259,7 +1330,7 @@
  '(isearch-lazy-highlight 'all-windows)
  '(mouse-wheel-progressive-speed nil)
  '(package-selected-packages
-   '(org-journal treesit-auto eat emacs-eat flycheck lsp-ui auto-package-update tree-sitter-langs treesit-langs corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
+   '(eshell-fringe-status eshell-vterm org-journal treesit-auto eat emacs-eat flycheck lsp-ui auto-package-update tree-sitter-langs treesit-langs corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
