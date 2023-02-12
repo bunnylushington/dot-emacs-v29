@@ -1148,6 +1148,17 @@
   :config
   (eshell-vterm-mode))
 
+(add-hook
+ 'eshell-mode-hook
+ (lambda ()
+   (eshell/alias "ff" "find-file $1")
+   (eshell/alias "d" "dired $1")
+   (eshell/alias "less" "find-file-read-only $1")))
+
+(defun eshell/gst (&rest args)
+  (magit-status (pop args) nil)
+  (eshell/echo))
+
 (use-package eshell-fringe-status
   :ensure t
   :config
