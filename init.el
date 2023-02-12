@@ -142,6 +142,19 @@
 
   :bind ("C-c C-s" . ii/web-search))
 
+;; dim other windows
+(use-package auto-dim-other-buffers
+  :ensure t
+  :custom
+  (auto-dim-other-buffers-affected-faces
+   '((default . auto-dim-other-buffers-face)
+     (org-block . auto-dim-other-buffers-face)
+     (org-hide . auto-dim-other-buffers-face)
+     (fringe . auto-dim-other-buffers-face)))
+  :config
+  (auto-dim-other-buffers-mode))
+
+
 ;; parens
 (use-package paren
   :ensure t
@@ -1336,12 +1349,11 @@
       (null-device . "/dev/null"))
      (eshell-connection-default-profile
       (eshell-path-env-list))))
- '(eat-eshell-mode t)
  '(go-ts-mode-indent-offset 2)
  '(isearch-lazy-highlight 'all-windows)
  '(mouse-wheel-progressive-speed nil)
  '(package-selected-packages
-   '(eshell-fringe-status eshell-vterm org-journal treesit-auto eat emacs-eat flycheck lsp-ui auto-package-update tree-sitter-langs treesit-langs corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
+   '(auto-dim-other-buffers eshell-fringe-status eshell-vterm org-journal treesit-auto flycheck lsp-ui auto-package-update tree-sitter-langs treesit-langs corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
