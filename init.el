@@ -21,7 +21,7 @@
 (global-goto-address-mode)
 (prefer-coding-system 'utf-8)
 (set-language-environment "UTF-8")
-(desktop-save-mode 1)
+; (desktop-save-mode 1)
 
 ;; Functions to help load path construction.
 (defun ii/emacs-dir-file (file)
@@ -218,6 +218,13 @@
 (global-set-key (kbd "s-<down>") 'shrink-window)
 (global-set-key (kbd "s-<up>") 'enlarge-window)
 
+;; Other window conveniences
+(defun ii/toggle-window-dedication ()
+  "Toggles window dedication in the selected window."
+  (interactive)
+  (set-window-dedicated-p (selected-window)
+                          (not (window-dedicated-p (selected-window)))))
+
 
 ;; Backup
 (setq vc-make-backup-files t)
@@ -383,6 +390,7 @@
 ;; vterm
 (use-package vterm
   :ensure t
+  :demand t
   :bind
   ((:map vterm-mode-map ("s-c" . vterm-copy-mode))
    (:map vterm-copy-mode-map ("s-c" . vterm-copy-mode)))
@@ -453,9 +461,7 @@
          ([remap compile] . detached-compile)
          ([remap recompile] . detached-compile-recompile)
          ;; Replace built in completion of sessions with `consult'
-         ([remap detached-open-session] . detached-consult-session)
-         (:map detached-vterm-mode-map ("C-<return>" . ace-window))
-         ("s-z" . detached-list-sessions))
+         ([remap detached-open-session] . detached-consult-session))
   :custom ((detached-show-output-on-attach t)
            (detached-terminal-data-command system-type)))
 
@@ -862,6 +868,11 @@
   :load-path "~/.emacs.d/ace-kill"
   :bind ("s-u" . ace-kill-hydra/body))
 
+(use-package which-key
+  :ensure t
+  :config
+  (which-key-mode))
+
 
 
 ;; Bookmark+ Configuration
@@ -899,6 +910,7 @@
 
 ;; Layout
 (setcdr (assq 'internal-border-width default-frame-alist) 12)
+(setcdr (assq 'menu-bar-lines default-frame-alist) 0)
 
 ;; Session
 (setq backup-directory-alist `((".*" . ,(ii/emacs-dir-file ".backups")))
@@ -1147,7 +1159,6 @@
  completion-category-defaults nil
  completion-category-overrides '((file (styles partial-completion))))
 
-(setq-default tab-width 2)
 
 (defun ii/print-hash-table (h)
   "String representation of a hash table H"
@@ -1259,6 +1270,10 @@
 ;; End of Eshell prompt configuration
 
 
+;; Jeez.  Everything wants to override this!
+(setq-default tab-width 2)
+
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -1353,14 +1368,22 @@
  '(isearch-lazy-highlight 'all-windows)
  '(mouse-wheel-progressive-speed nil)
  '(package-selected-packages
-   '(auto-dim-other-buffers eshell-fringe-status eshell-vterm org-journal treesit-auto flycheck lsp-ui auto-package-update tree-sitter-langs treesit-langs corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit)))
+   '(which-key auto-dim-other-buffers eshell-fringe-status eshell-vterm org-journal treesit-auto flycheck lsp-ui auto-package-update tree-sitter-langs treesit-langs corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit))
+ '(tab-bar-close-button-show nil)
+ '(tab-bar-format
+   '(tab-bar-format-history tab-bar-format-tabs tab-bar-separator))
+ '(tab-bar-select-tab-modifiers '(hyper super)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(aw-leading-char-face ((t (:foreground "red" :height 2.0))))
+ '(auto-dim-other-buffers-face ((t (:background "#1E2430"))))
+ '(aw-leading-char-face ((t (:foreground "#BF616A" :height 2.0))))
  '(isearch ((t (:foreground "black" :background "plum1" :inherit nano-face-strong))))
  '(lazy-highlight ((t (:foreground "black" :background "indian red" :inherit nano-face-subtle))))
+ '(tab-bar ((t (:height 1.1 :inherit variable-pitch))))
+ '(tab-bar-tab ((t (:inherit tab-bar))))
+ '(tab-bar-tab-inactive ((t (:foreground "#677691" :inherit tab-bar-tab))))
  '(variable-pitch ((t (:background "#2E3440" :foreground "#ECEFF4" :height 140 :family "Avenir Book")))))
 (put 'downcase-region 'disabled nil)
