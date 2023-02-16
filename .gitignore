@@ -5,4 +5,5 @@
 *
 !init.el
 !nano-emacs
+!ace-kill
 !.gitignore
