@@ -5,5 +5,5 @@
 	path = bookmark-plus
 	url = https://github.com/emacsmirror/bookmark-plus.git
 [submodule "ace-kill"]
-  path = ace-kill
-  url = https://github.com/bunnylushington/ace-kill.git
+    path = ace-kill
+    url = https://github.com/bunnylushington/ace-kill.git
