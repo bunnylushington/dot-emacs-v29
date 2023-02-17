@@ -16,6 +16,8 @@
       calendar-longitude -90.0715)
 
 (midnight-mode)
+(subword-mode)
+(undelete-frame-mode)
 (pixel-scroll-precision-mode)
 (add-to-list 'completion-ignored-extensions ".#")
 (global-goto-address-mode)
@@ -1154,7 +1156,7 @@
 ;; These things seem to be affected by nano...?
 (setq
  mac-use-title-bar t
- initial-major-mode 'elisp-lisp-mode
+ initial-major-mode 'emacs-lisp-mode
  completion-styles '(orderless)
  completion-category-defaults nil
  completion-category-overrides '((file (styles partial-completion))))
@@ -1280,6 +1282,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(bmkp-last-as-first-bookmark-file "~/.emacs.d/bookmarks")
+ '(codeium/metadata/api_key "b034a133-8e7f-4197-9cd7-26b54e3b8ebb")
  '(connection-local-criteria-alist
    '(((:application tramp :machine "localhost")
       tramp-connection-local-darwin-ps-profile)
@@ -1365,10 +1368,11 @@
      (eshell-connection-default-profile
       (eshell-path-env-list))))
  '(go-ts-mode-indent-offset 2)
+ '(help-enable-variable-value-editing t)
  '(isearch-lazy-highlight 'all-windows)
  '(mouse-wheel-progressive-speed nil)
  '(package-selected-packages
-   '(which-key auto-dim-other-buffers eshell-fringe-status eshell-vterm org-journal treesit-auto flycheck lsp-ui auto-package-update tree-sitter-langs treesit-langs corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit))
+   '(straight codeium which-key auto-dim-other-buffers eshell-fringe-status eshell-vterm org-journal treesit-auto flycheck lsp-ui auto-package-update tree-sitter-langs treesit-langs corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit))
  '(tab-bar-close-button-show nil)
  '(tab-bar-format
    '(tab-bar-format-history tab-bar-format-tabs tab-bar-separator))
