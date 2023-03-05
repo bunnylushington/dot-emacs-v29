@@ -25,6 +25,10 @@
 (set-language-environment "UTF-8")
 ; (desktop-save-mode 1)
 
+(define-key key-translation-map (kbd "C-<return>") [ersatz-c-return])
+(global-set-key [ersatz-c-return] 'ace-window)
+
+
 ;; Functions to help load path construction.
 (defun ii/emacs-dir-file (file)
   "Concatenate FILE to user-emacs-directory."
@@ -172,9 +176,12 @@
       display-fill-column-indicator-column 80)
 
 ;; Junk File Utilities
-(global-set-key (kbd "C-x j") 'open-junk-file)
-(global-set-key (kbd "C-x C-j") 'ii/open-current-junk-directory)
-(global-set-key (kbd "C-x M-j") 'ii/rgrep-junk-directory)
+(use-package open-junk-file
+  :ensure t
+  :config
+  (global-set-key (kbd "C-x j") 'open-junk-file)
+  (global-set-key (kbd "C-x C-j") 'ii/open-current-junk-directory)
+  (global-set-key (kbd "C-x M-j") 'ii/rgrep-junk-directory))
 
 (defun ii/open-current-junk-directory ()
   "Dired the most relevant junk directory."
@@ -259,6 +266,11 @@
   :ensure t
   :config
   (info-initialize))
+
+
+(use-package devdocs
+  :ensure t
+  :bind ("C-h C-j" . devdocs-lookup))
 
 ;; Vertico
 (use-package vertico
@@ -385,9 +397,29 @@
   :config
   (global-git-gutter-mode +1))
 
+(use-package highlight-indent-guides
+  :ensure t
+  :custom
+  ((highlight-indent-guides-responsive 'top)
+   (highlight-indent-guides-method 'character)))
+
+
 ;; YAML
 (use-package yaml-mode
-  :ensure t)
+  :ensure t
+  :hook (yaml-mode . highlight-indent-guides-mode))
+
+
+(defun ii/toggle-fold ()
+  "Toggle fold all lines larger than indentation on current line"
+  (interactive)
+  (let ((col 1))
+    (save-excursion
+      (back-to-indentation)
+      (setq col (+ 1 (current-column)))
+      (set-selective-display
+       (if selective-display nil (or col 1))))))
+(global-set-key (kbd "H-f") 'ii/toggle-fold)
 
 ;; vterm
 (use-package vterm
@@ -563,6 +595,8 @@
   (defun ii/lsp-mode-setup-completion()
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless)))
+  :bind (("<f15>" . lsp-format-buffer)
+         ("<f14>" . lsp-find-references))
   :hook ((go-mode . lsp)
          (go-ts-mode . lsp)
          (elixir-mode . lsp)
@@ -587,6 +621,20 @@
   :ensure t)
 
 
+
+(use-package treesit-auto
+  :ensure t
+  :demand t
+  :config
+  (setq treesit-auto-install t)
+  (global-treesit-auto-mode))
+
+
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+  (setq global-tree-sitter-mode t)
+  ;; (add-to-list 'tree-sitter-major-mode-language-alist
+  ;;              '(go-ts-mode . go))
+
 ;; Go
 ;;
 ;; Requires
@@ -596,7 +644,8 @@
 ;;   ln -s ~/go/bin/gopls ~/.local/bin
 (use-package go-ts-mode
   :ensure t
-  :after (treesit-langs lsp-mode)
+  :demand t
+  :after (lsp-mode)
   :config
   (defun ii/lsp-go-save-hooks ()
     (add-hook 'before-save-hook #'lsp-format-buffer t t)
@@ -777,71 +826,29 @@
   :init
   (setq alert-default-style 'osx-notifier))
 
-;; Treesitter
-(use-package tree-sitter
-  :ensure t
-  :config
-  (global-tree-sitter-mode)
-  (set-face-attribute 'tree-sitter-hl-face:function nil
-                      :inherit font-lock-function-name-face
-                      :foreground "coral1"
-                      :slant 'normal
-                      :height 1.3
-                      :width 'normal)
 
-  (set-face-attribute 'tree-sitter-hl-face:method nil
-                      :inherit 'tree-sitter-hl-face:function)
+;; (use-package tree-sitter-hl
+;;   :demand t
+;;   :config
+;;   (set-face-attribute 'tree-sitter-hl-face:function nil
+;;                       :inherit font-lock-function-name-face
+;;                       :foreground "coral1"
+;;                       :slant 'normal
+;;                       :height 1.3
+;;                       :width 'normal)
 
-  (set-face-attribute 'tree-sitter-hl-face:string nil
-                      :inherit 'font-lock-string-face
-                      :foreground "RosyBrown2")
+;;   (set-face-attribute 'tree-sitter-hl-face:method nil
+;;                       :inherit 'tree-sitter-hl-face:function)
 
-  (set-face-attribute 'tree-sitter-hl-face:type nil
-                      :inherit 'font-lock-type-face
-                      :foreground "MistyRose4")
-  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
+;;   (set-face-attribute 'tree-sitter-hl-face:string nil
+;;                       :inherit 'font-lock-string-face
+;;                       :foreground "RosyBrown2")
 
+;;   (set-face-attribute 'tree-sitter-hl-face:type nil
+;;                       :inherit 'font-lock-type-face
+;;                       :foreground "MistyRose4")
+;;   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
 
-;; There some weirdness here.  You'd *expect* that the shared objects
-;; would be named correctly (and installed in a reasonable path) but I
-;; don't think that's the case.  After we install the grammars, let's
-;; fix up the load-path and make some symlinks.
-
-;; Obviously this is just a mess.  It turns out that when the grammars
-;; are updated things go wonky.  I've had some success deleting the
-;; elpa/tree-sitter-langs... directory and restarting emacs (twice).
-;; Fixing all this up remains a low-key todo.
-
-(use-package tree-sitter-langs
-  :ensure t
-  :after tree-sitter
-  :config
-  (tree-sitter-langs-install-grammars)
-
-  (defun ii/tree-sitter-fixup-grammars ()
-    "Prepare tree-sitter-langs for actual use."
-    (interactive)
-    (require 'f)
-    (let ((grammar-dir (concat tree-sitter-langs-grammar-dir "bin")))
-      (add-to-list 'treesit-extra-load-path grammar-dir)
-      (mapc
-       (lambda (f)
-         (if (and (s-ends-with-p ".dylib" f)
-                  (not (s-contains-p "libtree-sitter-" f)))
-             (let* ((f-name (file-name-nondirectory f))
-                    (link-name (concat "libtree-sitter-" f-name))
-                    (link-path (f-join (file-name-directory f) link-name)))
-               (f-delete link-path t)
-               (f-copy f link-path))))
-       (f-entries grammar-dir))))
-
-  (ii/tree-sitter-fixup-grammars)
-  (push '(yaml-ts-mode . yaml) tree-sitter-major-mode-language-alist)
-  (push '(json-ts-mode . json) tree-sitter-major-mode-language-alist)
-  (push '(erlang-mode  . erlang) tree-sitter-major-mode-language-alist)
-  (push '(cperl-mode   . perl) tree-sitter-major-mode-language-alist)
-  (push '(elixir-mode  . elixir) tree-sitter-major-mode-language-alist)
-  (push '(go-ts-mode   . go) tree-sitter-major-mode-language-alist))
 
 (use-package sql
   :ensure t
@@ -912,7 +919,6 @@
 
 ;; Layout
 (setcdr (assq 'internal-border-width default-frame-alist) 12)
-(setcdr (assq 'menu-bar-lines default-frame-alist) 0)
 
 ;; Session
 (setq backup-directory-alist `((".*" . ,(ii/emacs-dir-file ".backups")))
@@ -1372,7 +1378,7 @@
  '(isearch-lazy-highlight 'all-windows)
  '(mouse-wheel-progressive-speed nil)
  '(package-selected-packages
-   '(straight codeium which-key auto-dim-other-buffers eshell-fringe-status eshell-vterm org-journal treesit-auto flycheck lsp-ui auto-package-update tree-sitter-langs treesit-langs corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit))
+   '(devdocs open-junk-file highlight-indent-guides hightlight-indent-guides straight codeium which-key auto-dim-other-buffers eshell-fringe-status eshell-vterm org-journal treesit-auto flycheck lsp-ui auto-package-update corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit))
  '(tab-bar-close-button-show nil)
  '(tab-bar-format
    '(tab-bar-format-history tab-bar-format-tabs tab-bar-separator))
@@ -1384,8 +1390,12 @@
  ;; If there is more than one, they won't work right.
  '(auto-dim-other-buffers-face ((t (:background "#1E2430"))))
  '(aw-leading-char-face ((t (:foreground "#BF616A" :height 2.0))))
+ '(font-lock-function-name-face ((t (:height 1.3 :foreground "coral1" :inherit nano-face-strong))))
+ '(highlight-indent-guides-character-face ((t (:inherit fringe))))
+ '(highlight-indentation-face ((t (:inverse-video t :inherit fringe))))
  '(isearch ((t (:foreground "black" :background "plum1" :inherit nano-face-strong))))
  '(lazy-highlight ((t (:foreground "black" :background "indian red" :inherit nano-face-subtle))))
+ '(shr-h3 ((t (:foreground "#BF616a" :slant italic :height 1.3))))
  '(tab-bar ((t (:height 1.1 :inherit variable-pitch))))
  '(tab-bar-tab ((t (:inherit tab-bar))))
  '(tab-bar-tab-inactive ((t (:foreground "#677691" :inherit tab-bar-tab))))
