@@ -210,6 +210,39 @@
   :ensure t
   :bind ("H-g" . deadgrep))
 
+(use-package crdt
+  :ensure t
+  :bind ("s-p" . ii/crdt/body))
+
+(defhydra ii/crdt (:color pink
+                          :hint nil
+                          :exit t)
+  "
+CRDT Actions
+
+_s_: share buffer         _c_: connect
+_b_: switch buffers       _l_: list buffers
+_f_: follow user          _L_: list sessions
+_F_: stop follow user
+_v_: visualize mode       _D_: disconnect
+                        _X_: stop session
+                        _S_: stop sharing buffer
+"
+  ("s" crdt-share-buffer)
+  ("b" crdt-switch-to-buffer)
+  ("f" crdt-follow-user)
+  ("F" crdt-stop-follow)
+  ("v" crdt-visualize-author-mode)
+  ("c" crdt-connect)
+  ("l" crdt-list-buffers)
+  ("L" crdt-list-sessions)
+  ("D" crdt-disconnect)
+  ("X" crdt-stop-session)
+  ("S" crdt-stop-share-buffer)
+  ("q" nil "quit" :color build))
+
+
+
 ;; Convenience Key Bindings
 (global-set-key (kbd "M-C-<down>") 'scroll-other-window)
 (global-set-key (kbd "M-C-<up>") 'scroll-other-window-down)
@@ -1378,7 +1411,7 @@
  '(isearch-lazy-highlight 'all-windows)
  '(mouse-wheel-progressive-speed nil)
  '(package-selected-packages
-   '(devdocs open-junk-file highlight-indent-guides hightlight-indent-guides straight codeium which-key auto-dim-other-buffers eshell-fringe-status eshell-vterm org-journal treesit-auto flycheck lsp-ui auto-package-update corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit))
+   '(crdt wgrep devdocs open-junk-file highlight-indent-guides hightlight-indent-guides straight codeium which-key auto-dim-other-buffers eshell-fringe-status eshell-vterm org-journal treesit-auto flycheck lsp-ui auto-package-update corfu-popupinfo corfu-popup mode-compile elixir-mode deadgrep org-mac-link noflet org-mac-iCal corfu-doc all-the-icons-completion yaml-pro flymake-json outline-magic impatient-mode markdown slack backup smart-comment hydra ip4g erlang erlang-mode elm-mode elm ace-window elpy elfeed elfeeds switch-window url-util show-paren show-paren-mode parens eldocx fringe fringe-mode company company-mode lsp-headerline lsp-mode docker hl-todo web-mode detached vterm quick-buffer-switch forge orderless consult kind-icon corfu marginalia vertico avy yaml-mode json-mode markdown-mode magit))
  '(tab-bar-close-button-show nil)
  '(tab-bar-format
    '(tab-bar-format-history tab-bar-format-tabs tab-bar-separator))
