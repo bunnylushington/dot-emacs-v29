@@ -758,7 +758,7 @@ _v_: visualize mode       _D_: disconnect
   :bind ("<f1>" . flycheck-list-errors)
   :config
   (set-face-attribute 'error nil
-                      :background nil
+                      :background 'unspecified
                       :foreground (nord-color "aurora-0"))
   )
 
@@ -921,7 +921,6 @@ _v_: visualize mode       _D_: disconnect
 
 (use-package markdown-mode
   :straight t
-  :hook (markdown-mode . impatient-mode)
   :mode (("\\.text\\'" . markdown-mode)
          ("\\.markdown\\'" . markdown-mode)
          ("\\.md\\'" . gfm-mode)))
