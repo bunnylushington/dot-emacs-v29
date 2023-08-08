@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: debug
+# key: debug
+# --
+fmt.Printf("\n** $1: %+v\n", ${1:var}) $>
+$0 $>

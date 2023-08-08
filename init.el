@@ -341,8 +341,14 @@ save it in `ffap-file-at-point-line-number' variable."
   (global-set-key (kbd "C-=")
                   (lambda () (interactive) (text-scale-set 0)))
 
-  ) ;;; end (use-package emacs ...
+  ;; toggle side windows
+  (global-set-key (kbd "H-z")
+                  #'window-toggle-side-windows)
 
+  ;; enable indentation+completion using tab
+  (setq tab-always-indent 'complete)
+
+  ) ;;; end (use-package emacs ...)
 
 (use-package tab-bar
   :init
@@ -798,7 +804,23 @@ _v_: visualize mode       _D_: disconnect
 (use-package yasnippet
   :straight t
   :config
+  (setq yas-snippet-dirs `(,(ii/emacs-dir-file "snippets")))
   (yas-global-mode 1))
+
+(use-package yasnippet-snippets
+  :straight t
+  :after yasnippet)
+
+(use-package cape
+  :straight t)
+
+(use-package cape-yasnippet
+  :straight '(cape-yasnippet
+              :type git
+              :host github
+              :repo "elken/cape-yasnippet")
+  :init
+  (add-to-list 'completion-at-point-functions #'cape-yasnippet))
 
 (use-package docker
   :straight t
@@ -881,33 +903,6 @@ _v_: visualize mode       _D_: disconnect
   (defun ii/lsp-go-save-hooks ()
     (add-hook 'before-save-hook #'lsp-format-buffer t t)
     (add-hook 'before-save-hook #'lsp-organize-imports t t))
-
-  (defun ii/go-debug-var ()
-    "Write a printf statement for the variable at point."
-    (interactive)
-    (let* ((var (thing-at-point 'word 'no-properties))
-           (txt (concat "fmt.Printf(\"\\n** " var ": %+v\\n\", " var ")")))
-      (end-of-line)
-      (insert "\n")
-      (indent-for-tab-command)
-      (insert txt "\n")
-      (kill-new txt)))
-
-  (defun ii/go-struct-member ()
-    "Take the tedium out of these specifications."
-    (interactive)
-    (let* ((slot (read-string "Slot Name: "))
-           (type (read-string "Type: " "string"))
-           (yaml (read-string "YAML: "))
-           (json (read-string "JSON: " yaml))
-           (csv  (read-string "CSV: "))
-           (table (read-string "Table: ")))
-      (insert
-       slot " " type
-       " `yaml:\"" yaml
-       "\" json:\"" json
-       "\" csv:\"" csv
-       "\" table:\"" table "\"`\n")))
 
   :custom
   (go-ts-mode-indent-offset 2)
@@ -1433,6 +1428,29 @@ _v_: visualize mode       _D_: disconnect
       (with-output-to-temp-buffer "*JWT*"
         (princ (buffer-string)))))
   t)
+
+(defun ii/initial-downcase (str)
+  "Downcase the first letter of a camel case string."
+  (let ((words (s-split-words str)))
+    (s-join "" (cons (downcase (car words)) (cdr words)))))
+
+(defun ii/bare-buffer-filename (&optional filepath)
+  "Return the file sans directory and extension."
+  (interactive)
+  (let ((file (or filepath (buffer-file-name))))
+    (file-name-sans-extension (file-name-nondirectory file))))
+
+(defun ii/cobra-cmd-skel-helper (e &optional filepath)
+  "Return variable/package names generated from the filepath."
+  (let* ((file (or filepath (buffer-file-name)))
+         (bare-filename (ii/bare-buffer-filename file))
+         (file-parts (s-split "_" bare-filename))
+         (package (car file-parts))
+         (command (cadr file-parts)))
+    (cond ((eql e 'package) package)
+          ((eql e 'command) command)
+          ((eql e 'parent-command) (format "%sCmd" (s-titleize package)))
+          ((eql e 'local-command) (format "%s%sCmd" package (s-titleize command))))))
 
 ;; GCP Access Token hack
 (defun ii/verify-gcp-access-token (start end &optional tok)

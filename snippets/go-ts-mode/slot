@@ -1,0 +1,5 @@
+# key: slot
+# name: slot
+# --
+${1:slot} ${2:type} \`yaml:"${1:$(ii/initial-downcase yas-text)}" json:"${1:$(ii/initial-downcase yas-text)}" csv:"${1:$(s-snake-case yas-text)}" table:"${1:$(s-titleized-words (s-spaced-words yas-text))}"\`
+$0

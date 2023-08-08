@@ -1,0 +1,21 @@
+# key: cobracmd
+# name: cobra-cmd
+# --
+package `(ii/cobra-cmd-skel-helper 'package)`
+
+func init() {
+ `(ii/cobra-cmd-skel-helper 'local-command)` := &cobra.Command{
+   Use: "`(ii/cobra-cmd-skel-helper 'command)` ${1:usage}",
+   Short: "${2:description}",
+   Long: "$2",
+   Run: `(ii/cobra-cmd-skel-helper 'command)`,
+   }
+  `(ii/cobra-cmd-skel-helper 'parent-command)`.AddCommand(`(ii/cobra-cmd-skel-helper 'local-command)`)
+}
+
+func `(ii/cobra-cmd-skel-helper 'command)` (cmd *cobra.Command, args []string) {
+  log.Debug("running `(ii/cobra-cmd-skel-helper 'package)`-`(ii/cobra-cmd-skel-helper 'command)`")
+  cloudID := config.Do.MustGetCloudID()
+  $0
+  util.Do.Exit(0)
+}
