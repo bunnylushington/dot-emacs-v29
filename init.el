@@ -1441,7 +1441,10 @@ _v_: visualize mode       _D_: disconnect
     (file-name-sans-extension (file-name-nondirectory file))))
 
 (defun ii/cobra-cmd-skel-helper (e &optional filepath)
-  "Return variable/package names generated from the filepath."
+  "Return variable/package names generated from the filepath.
+
+We expect Cobra commands to be named <package>_<cmd>.go and from
+that we can generate a skeleton with the cobracmd yasnippet."
   (let* ((file (or filepath (buffer-file-name)))
          (bare-filename (ii/bare-buffer-filename file))
          (file-parts (s-split "_" bare-filename))
