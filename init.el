@@ -97,7 +97,8 @@
     dedicated-symbol))
 
 (defun ii/nano-lsp-warnings-errors (dedicated-symbol)
-  (if (not (null lsp--buffer-workspaces))
+  (if (and (boundp 'lsp--buffer-workspaces)
+           (not (null lsp--buffer-workspaces)))
       (let ((errors 0)
             (warnings 0)
             (error-msg nil)
@@ -130,11 +131,11 @@
 
 (use-package emacs
   :bind (("C-M-SPC" . cycle-spacing)
-	     ("<f5>" . scratch-buffer)
-	     ("C-+" . text-scale-increase)
-	     ("C--" . text-scale-decrease)
-	     ("C-=" . ii/text-scale-reset)
-	     ("C-c w" . display-fill-column-indicator-mode))
+	       ("<f5>" . scratch-buffer)
+	       ("C-+" . text-scale-increase)
+	       ("C--" . text-scale-decrease)
+	       ("C-=" . ii/text-scale-reset)
+	       ("C-c w" . display-fill-column-indicator-mode))
 
   :hook ((after-save . executable-make-buffer-file-executable-if-script-p))
 
@@ -195,9 +196,9 @@
     (setq tab-width (or width 2)))
 
   (setq ii/exec-path
-	    `("/usr/local/bin"
-	      "/opt/homebrew/bin"
-	      ,(ii/home-dir-file "go/bin")))
+	      `("/usr/local/bin"
+	        "/opt/homebrew/bin"
+	        ,(ii/home-dir-file "go/bin")))
   (mapc (lambda (path) (add-to-list 'exec-path path)) ii/exec-path)
 
   (defun ii/text-scale-reset ()
@@ -232,49 +233,49 @@
 
   ;; Windowing
   (setq switch-to-buffer-obey-display-actions t
-	    switch-to-buffer-in-dedicated-window 'pop)
+	      switch-to-buffer-in-dedicated-window 'pop)
 
   (setq display-buffer-alist
-	    `((,(rx (or "vterm"
-		            "VTerm"))
-	       (display-buffer-reuse-window))
+	      `((,(rx (or "vterm"
+		                "VTerm"))
+	         (display-buffer-reuse-window))
 
-	      (,(rx (or "*detached shell command*"
-		            "*detached-session-output"
-		            "cmd: " ;; for specially named detached shell commands
-		            "*detached-list*"
-		            "*Flycheck errors*"))
-	       (display-buffer-in-side-window)
-	       (side . bottom)
-	       (slot . 0)
-	       (window-height . 15))
+	        (,(rx (or "*detached shell command*"
+		                "*detached-session-output"
+		                "cmd: " ;; for specially named detached shell commands
+		                "*detached-list*"
+		                "*Flycheck errors*"))
+	         (display-buffer-in-side-window)
+	         (side . bottom)
+	         (slot . 0)
+	         (window-height . 15))
 
-	      (,(rx (or "*help*"
-		            "*info*"))
-	       (display-buffer-reuse-window
-	        display-buffer-in-side-window)
-	       (side . right)
-	       (slot . 0)
-	       (window-width . 80))
+	        (,(rx (or "*help*"
+		                "*info*"))
+	         (display-buffer-reuse-window
+	          display-buffer-in-side-window)
+	         (side . right)
+	         (slot . 0)
+	         (window-width . 80))
 
-	      (,(rx (or "*deadgrep"
-		            "*xref*"
-		            "Magit"
-		            "converge.org"
-		            "COMMIT_EDITMSG"))
-	       (display-buffer-in-side-window)
-	       (side . left)
-	       (slot . 0)
-	       (window-width . 80)
-	       (window-parameters
-	        (no-delete-other-windows . t)))))
+	        (,(rx (or "*deadgrep"
+		                "*xref*"
+		                "Magit"
+		                "converge.org"
+		                "COMMIT_EDITMSG"))
+	         (display-buffer-in-side-window)
+	         (side . left)
+	         (slot . 0)
+	         (window-width . 80)
+	         (window-parameters
+	          (no-delete-other-windows . t)))))
 
   (defun ii/close-help-window ()
     "Close all *Help* windows."
     (interactive)
     (dolist (win (window-list))
       (if (equal "*Help*" (buffer-name (window-buffer win)))
-	      (delete-window win))))
+	        (delete-window win))))
   (global-set-key [ersatz-c-z] 'ii/close-help-window)
 
   ;; Some backup magic.  I hate losing things.
@@ -299,18 +300,18 @@ save it in `ffap-file-at-point-line-number' variable."
            (name
             (or (condition-case nil
                     (and (not (string-match "//" string)) ; foo.com://bar
-			             (substitute-in-file-name string))
+			                   (substitute-in-file-name string))
                   (error nil))
-		        string))
+		            string))
            (line-number-string
             (and (string-match ":[0-9]+" name)
-		         (substring name (1+ (match-beginning 0)) (match-end 0))))
+		             (substring name (1+ (match-beginning 0)) (match-end 0))))
            (line-number
             (and line-number-string
-		         (string-to-number line-number-string))))
+		             (string-to-number line-number-string))))
       (if (and line-number (> line-number 0))
           (setq ffap-file-at-point-line-number line-number)
-	    (setq ffap-file-at-point-line-number nil))))
+	      (setq ffap-file-at-point-line-number nil))))
 
   (defadvice find-file-at-point (after ffap-goto-line-number activate)
     "If `ffap-file-at-point-line-number' is non-nil goto this line."
@@ -389,18 +390,18 @@ save it in `ffap-file-at-point-line-number' variable."
                       :foreground (nord-color "aurora-0")
                       :height 2.0)
   :bind (("M-o" . ace-window)
-	     ([ersatz-c-return] . ace-window)))
+	       ([ersatz-c-return] . ace-window)))
 
 (use-package zoom-window
   :straight t
   :bind (("M-z" . zoom-window-zoom)
-	     ([ersatz-m-z] . zoom-window-zoom))
+	       ([ersatz-m-z] . zoom-window-zoom))
   :config
   (defun ii/enlarge-on-zoom (&rest r)
     "When zooming a window, enlarge the text; reverse the
  modification when the window is un-zoomed."
     (if (zoom-window--enable-p)
-	    (text-scale-set 2)
+	      (text-scale-set 2)
       (text-scale-set 0)))
   (advice-add #'zoom-window-zoom :after #'ii/enlarge-on-zoom))
 
@@ -480,8 +481,8 @@ save it in `ffap-file-at-point-line-number' variable."
   :bind ("s-p" . ii/crdt/body)
   :config
   (defhydra ii/crdt (:color pink
-			                :hint nil
-			                :exit t)
+			                      :hint nil
+			                      :exit t)
     "
 CRDT Actions
 
@@ -652,16 +653,8 @@ _v_: visualize mode       _D_: disconnect
 (use-package ghub
   :straight t)
 
-(use-package smartrep
-  :straight t
-  :config
-  (smartrep-define-key global-map "C-x"
-                       '(("{" . shrink-window-horizontally)
-                         ("}" . enlarge-window-horizontally)))
-
 (use-package diff-hl
   :straight t
-  :after smartrep
   :custom (diff-hl-command-prefix (kbd "s-v"))
   :config
   (diff-hl-flydiff-mode)
@@ -883,6 +876,18 @@ _v_: visualize mode       _D_: disconnect
   :custom
   (lsp-ui-peek-enable t))
 
+(use-package dap-mode
+  :straight t
+  :after lsp-mode
+  :config
+  (dap-mode 1)
+  (setq dap-print-io t)
+  (dap-ui-mode 1)
+  (dap-tooltip-mode 1)
+  (require 'dap-hydra)
+  (require 'dap-dlv-go)
+  (add-hook 'dap-stopped-hook
+            (lambda (arg) (call-interactively #'dap-hydra))))
 
 (use-package flycheck
   :straight t)
@@ -1369,8 +1374,8 @@ _v_: visualize mode       _D_: disconnect
   query for a URL.  Prompt for both if the region is not active."
     (interactive "r")
     (cl-flet ((link (label url)
-                 (if (use-region-p) (delete-region start end))
-                 (insert (format "[%s](%s) " label url))))
+                (if (use-region-p) (delete-region start end))
+                (insert (format "[%s](%s) " label url))))
       ;; no region specified
       (if (not (use-region-p))
           (let ((url (read-from-minibuffer "URL: "))
