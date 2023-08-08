@@ -270,7 +270,7 @@
 	        (no-delete-other-windows . t)))))
 
   (defun ii/close-help-window ()
-    "Cloas all *Help* windows."
+    "Close all *Help* windows."
     (interactive)
     (dolist (win (window-list))
       (if (equal "*Help*" (buffer-name (window-buffer win)))
@@ -646,10 +646,32 @@ _v_: visualize mode       _D_: disconnect
 (use-package ghub
   :straight t)
 
-(use-package git-gutter
+(use-package smartrep
   :straight t
   :config
-  (global-git-gutter-mode +1))
+  (smartrep-define-key global-map "C-x"
+                       '(("{" . shrink-window-horizontally)
+                         ("}" . enlarge-window-horizontally)))
+
+(use-package diff-hl
+  :straight t
+  :after smartrep
+  :custom (diff-hl-command-prefix (kbd "s-v"))
+  :config
+  (diff-hl-flydiff-mode)
+  (add-hook 'dired-mode-hook 'diff-hl-dired-mode-unless-remote)
+  (set-face-attribute 'diff-hl-insert nil
+                      :foreground (nord-color "aurora-3"))
+  (set-face-attribute 'diff-hl-delete nil
+                      :foreground (nord-color "aurora-0"))
+  (set-face-attribute 'diff-hl-change nil
+                      :inherit 'default
+                      :background 'unspecified
+                      :foreground (nord-color "frost-3")))
+
+
+(use-package system-packages
+  :straight t)
 
 (use-package yaml-mode
   :straight t)
