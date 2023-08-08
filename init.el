@@ -96,9 +96,34 @@
               dedicated-symbol)
     dedicated-symbol))
 
+(defun ii/nano-lsp-warnings-errors (dedicated-symbol)
+  (if (not (null lsp--buffer-workspaces))
+      (let ((errors 0)
+            (warnings 0)
+            (error-msg nil)
+            (warning-msg nil))
+        (maphash (lambda (file diagnostic)
+                   (dolist (diag diagnostic)
+                     (-let* (((&Diagnostic :message :severity? :source?
+                                           :range (&Range :start (&Position :line start-line))) diag))
+                       (cond
+                        ((= severity? 1) (setq errors (1+ errors)))
+                        ((= severity? 2) (setq warnings (1+ warnings)))))))
+                 (lsp-diagnostics))
+        (setq warning-msg (if (> warnings 0) (concat " ⚠ " (number-to-string warnings) "  ") ""))
+        (setq error-msg (if (> errors 0) (concat " 💀 " (number-to-string errors) "  ") ""))
+        (propertize (concat error-msg warning-msg dedicated-symbol)
+                    'face (nano-modeline-face 'secondary)))
+    dedicated-symbol))
+
+
+
 (advice-add #'nano-modeline-window-dedicated
             :filter-return
             'ii/nano-modeline-window-zoom)
+(advice-add #'nano-modeline-window-dedicated
+            :filter-return
+            'ii/nano-lsp-warnings-errors)
 
 ;; End of NANO Setup
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -164,6 +189,10 @@
   (defun ii/home-dir-file (file)
     "Concatenate FILE to $HOME."
     (expand-file-name file (getenv "HOME")))
+
+  (defun ii/set-tab-width (&optional width)
+    (interactive "nWidth: ")
+    (setq tab-width (or width 2)))
 
   (setq ii/exec-path
 	    `("/usr/local/bin"
@@ -755,12 +784,13 @@ _v_: visualize mode       _D_: disconnect
 
 (use-package flymake
   :straight t
-  :bind ("<f1>" . flycheck-list-errors)
+  :after lsp-mode
+  :bind ("<f1>" . lsp-ui-flycheck-list)
   :config
   (set-face-attribute 'error nil
+                      :inherit 'default
                       :background 'unspecified
-                      :foreground (nord-color "aurora-0"))
-  )
+                      :foreground (nord-color "aurora-0")))
 
 (use-package eldoc
   :custom
@@ -809,6 +839,7 @@ _v_: visualize mode       _D_: disconnect
   :custom
   (lsp-ui-peek-enable t))
 
+
 (use-package flycheck
   :straight t)
 
@@ -817,9 +848,8 @@ _v_: visualize mode       _D_: disconnect
   :demand t
   :config
   (setq treesit-auto-install t)
-  (global-treesit-auto-mode)
-  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
-  (setq global-tree-sitter-mode t))
+  (global-treesit-auto-mode))
+
 
 (use-package go-ts-mode
   :straight t
@@ -860,8 +890,8 @@ _v_: visualize mode       _D_: disconnect
   :custom
   (go-ts-mode-indent-offset 2)
   :bind (("H-d" . ii/go-debug-var))
-  :hook ((go-mode . tree-sitter-hl-mode)
-         (go-mode . ii/lsp-go-save-hooks)))
+  :hook ((go-ts-mode . ii/set-tab-width)
+         (go-ts-mode . ii/lsp-go-save-hooks)))
 
 ;; Go REPL
 ;;
