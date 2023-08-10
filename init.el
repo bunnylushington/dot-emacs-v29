@@ -126,6 +126,8 @@
             :filter-return
             'ii/nano-lsp-warnings-errors)
 
+(setq nano-modeline-mode-formats nil)
+
 ;; End of NANO Setup
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -161,6 +163,8 @@
    completion-category-defaults nil
    completion-category-overrides '((file (styles partial-completion)))
 
+   bookmark-save-flag 1
+
    calendar-latitude 29.9510
    calendar-longitude -90.0715)
 
@@ -168,10 +172,10 @@
   (subword-mode)
   (undelete-frame-mode)
   (pixel-scroll-precision-mode)
-  (add-to-list 'completion-ignored-extensions ".#")
   (global-goto-address-mode)
   (prefer-coding-system 'utf-8)
   (set-language-environment "UTF-8")
+  (add-to-list 'completion-ignored-extensions ".#")
 
   ;; Don't warn me about these...
   (put 'narrow-to-region 'disabled nil)
@@ -712,7 +716,6 @@ _v_: visualize mode       _D_: disconnect
   (global-whitespace-mode t)
   :hook (before-save . delete-trailing-whitespace))
 
-(setq nano-modeline-mode-formats nil)
 (use-package detached
   :straight t
   :init
@@ -1188,9 +1191,21 @@ _v_: visualize mode       _D_: disconnect
   :bind ("s-u" . 'ace-kill-hydra/body))
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Org
+;;
 (use-package org
+  :straight t
+  :ensure t
   :config
-  (add-hook 'org-mode-hook #'nano-modeline-org-mode))
+  (require 'org-id)
+  (add-hook 'org-mode-hook #'nano-modeline-org-mode)
+
+
+
+  ) ;; End of Org configuration
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Slack
