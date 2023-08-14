@@ -222,6 +222,8 @@
     (interactive "nWidth: ")
     (setq tab-width (or width 2)))
 
+  (setq custom-file (ii/emacs-dir-file "custom-file.el"))
+
   (setq ii/exec-path
 	      `("/usr/local/bin"
 	        "/opt/homebrew/bin"
@@ -684,7 +686,7 @@ _v_: visualize mode       _D_: disconnect
   :straight t
   :custom (diff-hl-command-prefix (kbd "s-v"))
   :config
-  (diff-hl-flydiff-mode)
+  (global-diff-hl-mode)
   (add-hook 'dired-mode-hook 'diff-hl-dired-mode-unless-remote)
   (set-face-attribute 'diff-hl-insert nil
                       :foreground (nord-color "aurora-3"))
@@ -834,10 +836,10 @@ _v_: visualize mode       _D_: disconnect
   :straight t)
 
 (use-package yasnippet-capf
-  :straight '(cape-yasnippet
+  :straight '(yasnippet-capf
               :type git
               :host github
-              :repo "anoduck/cape-yasnippet")
+              :repo "LuigiPiucco/yasnippet-capf")
   :after cape
   :init
   (add-to-list 'completion-at-point-functions #'yasnippet-capf))
