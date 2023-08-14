@@ -11,6 +11,11 @@ My Emacs configuration.   A few notes:
 * Although the nano-emacs config is pretty self-contained and can
   presumably be removed, the configuration uses nord-color heavily.
 
+* The Go treesitter module doesn't install automatically with
+  treesit-auto and I'm not sure why.  This is easily resolved with
+  `M-x treesit-install-language` and selecting `go`.  Oddly this isn't
+  a problem for other languages.
+
 I've used straight.el to do the heavy lifting.  The best way to
 bootstrap this is to clone the repo to a clean `~/.emacs.d` and start
 up Emacs.  It'll take a while (~ 10 minutes) on the first invocation
