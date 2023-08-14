@@ -685,8 +685,8 @@ _v_: visualize mode       _D_: disconnect
 (use-package diff-hl
   :straight t
   :custom (diff-hl-command-prefix (kbd "s-v"))
+  :init  (global-diff-hl-mode)
   :config
-  (global-diff-hl-mode)
   (add-hook 'dired-mode-hook 'diff-hl-dired-mode-unless-remote)
   (set-face-attribute 'diff-hl-insert nil
                       :foreground (nord-color "aurora-3"))
@@ -1030,6 +1030,10 @@ _v_: visualize mode       _D_: disconnect
 (use-package restclient
   :straight t
   :mode "\\.rest\\'")
+
+(use-package restclient-jq
+  :straight t
+  :after jq-mode)
 
 (use-package jq-mode
   :straight t)
