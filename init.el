@@ -92,7 +92,7 @@
   "Advice after `nano-modeline-window-dedicated'."
   (if (and (fboundp 'zoom-window--enable-p)
            (zoom-window--enable-p))
-      (concat (propertize "🔍  " 'face (nano-modeline-face 'secondary))
+      (concat (propertize "🔍 " 'face (nano-modeline-face 'secondary))
               dedicated-symbol)
     dedicated-symbol))
 
@@ -111,20 +111,43 @@
                         ((= severity? 1) (setq errors (1+ errors)))
                         ((= severity? 2) (setq warnings (1+ warnings)))))))
                  (lsp-diagnostics))
-        (setq warning-msg (if (> warnings 0) (concat " ⚠ " (number-to-string warnings) "  ") ""))
-        (setq error-msg (if (> errors 0) (concat " 💀 " (number-to-string errors) "  ") ""))
+        (setq warning-msg (if (> warnings 0) (concat " ⚠ " (number-to-string warnings) " ") ""))
+        (setq error-msg (if (> errors 0) (concat " 💀 " (number-to-string errors) " ") ""))
         (propertize (concat error-msg warning-msg dedicated-symbol)
                     'face (nano-modeline-face 'secondary)))
     dedicated-symbol))
 
+(defun ii/nano-modeline-autobookmark (dedicated-symbol)
+  (if (and (boundp 'bmkp-automatic-bookmark-mode)
+           (not (null bmkp-automatic-bookmark-mode)))
+      (concat (propertize "🔖 " 'face (nano-modeline-face 'secondary))
+              dedicated-symbol)
+    dedicated-symbol))
 
+(defun ii/nano-modeline-maybe-add-space (dedicated-symbol)
+  "Add a little breathing room to the right modeline."
+  (concat dedicated-symbol (propertize "   " 'face (nano-modeline-face 'secondary))))
 
 (advice-add #'nano-modeline-window-dedicated
             :filter-return
-            'ii/nano-modeline-window-zoom)
+            'ii/nano-modeline-window-zoom
+            '((depth . 10)))
+
 (advice-add #'nano-modeline-window-dedicated
             :filter-return
-            'ii/nano-lsp-warnings-errors)
+            'ii/nano-lsp-warnings-errors
+            '((depth . 20)))
+
+(advice-add #'nano-modeline-window-dedicated
+            :filter-return
+            'ii/nano-modeline-autobookmark
+            '((depth . 30)))
+
+(advice-add #'nano-modeline-window-dedicated
+            :filter-return
+            'ii/nano-modeline-maybe-add-space
+            '((depth . 99)))
+
 
 (setq nano-modeline-mode-formats nil)
 
@@ -1006,6 +1029,9 @@ _v_: visualize mode       _D_: disconnect
   :straight t
   :mode "\\.rest\\'")
 
+(use-package jq-mode
+  :straight t)
+
 (use-package alert
   :commands (alert)
   :init
@@ -1215,16 +1241,44 @@ _v_: visualize mode       _D_: disconnect
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Org
 ;;
+
+(defun ii/configure-org-buffer ()
+  (interactive)
+  (org-indent-mode)
+  (text-scale-set 1)
+  (variable-pitch-mode 1))
+
 (use-package org
   :straight t
   :ensure t
+  :hook ((org-mode . nano-modeline-org-mode)
+         (org-mode . ii/configure-org-buffer))
   :config
-  (require 'org-id)
-  (add-hook 'org-mode-hook #'nano-modeline-org-mode)
-
-
-
+  (set-face-attribute 'org-level-1 nil
+                      :height 1.5
+                      :foreground (nord-color "aurora-2"))
+  (set-face-attribute 'org-level-2 nil
+                      :height 1.3
+                      :foreground (nord-color "frost-0"))
+  (set-face-attribute 'org-level-3 nil
+                      :height 1.1
+                      :foreground (nord-color "aurora-3"))
+  (set-face-attribute 'org-drawer nil
+                      :inherit 'fixed-pitch
+                      :height 0.7
+                      :foreground (nord-color "polar-night-3"))
+  (set-face-attribute 'org-table nil
+                      :inherit 'fixed-pitch)
+  (set-face-attribute 'org-date nil :inherit 'org-drawer)
+  (set-face-attribute 'org-date nil :inherit 'org-drawer)
+  (set-face-attribute 'org-special-keyword nil :inherit 'org-drawer)
   ) ;; End of Org configuration
+
+(use-package org-bullets
+  :straight t
+  :hook (org-mode . org-bullets-mode)
+  :after org)
+
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1436,17 +1490,26 @@ _v_: visualize mode       _D_: disconnect
   (interactive "d")
   (let ((face (or (get-char-property (point) 'read-face-name)
                   (get-char-property (point) 'face))))
-    (if face (message "Face: %s" face) (message "No face at %d" pos))))
+    (if face (progn
+               (kill-new (symbol-name face))
+               (message "Face: %s" face))
+      (message "No face at %d" pos))))
+
+(defun ii/func-region (start end func)
+  "run a function over the region between START and END in current buffer."
+  (save-excursion
+    (let ((text (delete-and-extract-region start end)))
+      (insert (funcall func text)))))
 
 (defun ii/hex-region (start end)
   "urlencode the region between START and END in current buffer."
   (interactive "r")
-  (func-region start end #'url-hexify-string))
+  (ii/func-region start end #'url-hexify-string))
 
 (defun ii/unhex-region (start end)
   "de-urlencode the region between START and END in current buffer."
   (interactive "r")
-  (func-region start end #'url-unhex-string))
+  (ii/func-region start end #'url-unhex-string))
 
 (defun ii/print-hash-table (h)
   "String representation of a hash table H"
@@ -1542,6 +1605,31 @@ that we can generate a skeleton with the cobracmd yasnippet."
         (add-to-list 'outputs (car record))))
     outputs))
 
+
+(use-package bookmark+
+  :straight t
+  :custom
+  (bmkp-jump-map-prefix-keys `(,(kbd "<f4>")))
+  (bmkp-bookmark-map-prefix-keys `(,(kbd "C-x x") ,(kbd "C-<f4>")))
+  (bmkp-prompt-for-tags-flag t)
+  :config
+  (add-hook 'go-ts-mode-hook #'bmkp-automatic-bookmark-mode)
+
+  (set-face-attribute 'bmkp-url nil
+                      :foreground (nord-color "frost-3"))
+  (set-face-attribute 'bmkp-bookmark-list nil
+                      :inherit 'default
+                      :background 'unspecified
+                      :foreground (nord-color "frost-1"))
+  (set-face-attribute 'bmkp-t-mark nil
+                      :foreground (nord-color "frost-0"))
+  (set-face-attribute 'bmkp-heading nil
+                      :height 1.2
+                      :foreground (nord-color "snow-storm-0"))
+  (set-face-attribute 'bmkp-local-directory nil
+                      :inherit 'default
+                      :background 'unspecified
+                      :foreground (nord-color "aurora-2")))
 
 ;; eshell/bmk - version 0.1.3
 ;;
