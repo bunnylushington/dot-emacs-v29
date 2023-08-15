@@ -279,6 +279,13 @@
 	         (slot . 0)
 	         (window-height . 15))
 
+          ;; restclient mode output
+          (,(rx (or "*HTTP Response*"))
+           (display-buffer-in-side-window)
+           (side . bottom)
+           (slot . 1)
+           (window-height . 15))
+
 	        (,(rx (or "*help*"
 		                "*info*"))
 	         (display-buffer-reuse-window
@@ -743,6 +750,7 @@ _v_: visualize mode       _D_: disconnect
 
 (use-package detached
   :straight t
+  :bind ([ersatz-f2] . 'detached-list-sessions)
   :init
   (detached-init)
   (setq comint-scroll-show-maximum-output t)
@@ -755,7 +763,6 @@ _v_: visualize mode       _D_: disconnect
          ;; Replace built in completion of sessions with `consult'
          ([remap detached-open-session] . detached-consult-session))
   :config
-  (global-set-key [ersatz-f2] 'detached-list-sessions)
   (if (eq system-type 'darwin)
       (setq detached-notification-function #'detached-extra-alert-notification))
   :custom ((detached-show-output-on-attach t)
