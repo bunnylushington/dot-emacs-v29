@@ -279,8 +279,9 @@
 	         (slot . 0)
 	         (window-height . 15))
 
-          ;; restclient mode output
-          (,(rx (or "*HTTP Response*"))
+          ;; restclient mode; bookmarks
+            (,(rx (or "*HTTP Response*"
+                      "*Bookmark List*"))
            (display-buffer-in-side-window)
            (side . bottom)
            (slot . 1)
@@ -848,7 +849,6 @@ _v_: visualize mode       _D_: disconnect
               :host github
               :repo "LuigiPiucco/yasnippet-capf")
   :after cape
-  :init
   (add-to-list 'completion-at-point-functions #'yasnippet-capf))
 
 (use-package docker
@@ -887,15 +887,21 @@ _v_: visualize mode       _D_: disconnect
   :straight t
   :init
   (setq lsp-keymap-prefix "s-l")
-  (defun ii/lsp-mode-setup-completion()
+  (defun ii/lsp-mode-setup-completion ()
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless)))
-  :bind (("<f15>" . lsp-format-buffer)
-         ("<f14>" . lsp-find-references))
+
+  (defun ii/lsp-mode-super-capf ()
+    (setq-local completion-at-point-functions
+                `(,(cape-super-capf
+                    #'lsp-completion-at-point
+                    #'yasnippet-capf))))
+
   :hook ((go-mode . lsp)
          (go-ts-mode . lsp)
          (elixir-mode . lsp)
          (python-mode . lsp)
+         (lsp-completion-mode . ii/lsp-mode-super-capf)
          (lsp-completion-mode . ii/lsp-mode-setup-completion))
   :custom
   (lsp-completion-provider :none)
@@ -1404,8 +1410,16 @@ _v_: visualize mode       _D_: disconnect
 
   (set-face-attribute 'slack-mrkdwn-code-block-face nil
                       :inherit 'default
+                      :background (nord-color "polar-night-0")
+                      :extend t
                       :height 1
-                      :foreground "pink")
+                      :foreground (nord-color "aurora-3"))
+
+  (set-face-attribute 'slack-mrkdwn-code-face nil
+                      :inherit 'default
+                      :background 'unspecified
+                      :height 1
+                      :foreground (nord-color "aurora-3"))
 
   (set-face-attribute 'slack-message-output-text nil
                       :height 1.1
@@ -1494,6 +1508,22 @@ _v_: visualize mode       _D_: disconnect
               (link text url)))))))
 
   (define-key lui-mode-map (kbd "M-k") 'ii/lui-add-link))
+
+
+;; ---- Add a small amount of space between consecutive messages.
+;; ---- This interferes with the "New Message" overlay that lives at
+;; ---- the bottom of the Slack buffer.  I'm okay with that for now.
+(defface ii/lui-message-separator-face
+  '((t (:inherit default-face :height 30)))
+  "Intra-message spacing.")
+
+(defun ii/lui-message-separator ()
+  "Add space after incoming message"
+  (insert (propertize "\n" 'face 'ii/lui-message-separator-face)))
+
+;; (add-hook 'lui-post-output-hook 'ii/lui-message-separator)
+
+
 ;; End of Slack configuration
 
 
