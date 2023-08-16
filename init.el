@@ -22,6 +22,24 @@
           ns-alternate-modifier 'super
           ns-command-modifier 'meta))
 
+;; Maybe swap H- and s- in (kbd "...") and :bind assignments.
+(defun ii/swap-hyper-super (&rest rest)
+  (let ((key (caar rest)))
+    (if (> (length key) 2)
+        (cond
+         ((string= (substring key 0 2) "s-")
+          (setf (substring key 0 2) "H-"))
+         ((string= (substring key 0 2) "H-")
+          (setf (substring key 0 2) "s-"))))
+    (list key)))
+
+(if (not (eql system-type 'darwin))
+    (advice-add #'kbd :filter-args 'ii/swap-hyper-super))
+
+
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; NANO Setup
 ;;
@@ -196,6 +214,7 @@
   (undelete-frame-mode)
   (pixel-scroll-precision-mode)
   (global-goto-address-mode)
+  (find-function-setup-keys)
   (prefer-coding-system 'utf-8)
   (set-language-environment "UTF-8")
   (add-to-list 'completion-ignored-extensions ".#")
@@ -422,10 +441,13 @@ save it in `ffap-file-at-point-line-number' variable."
   :straight t
   :custom
   (aw-keys '(49 50 51 52 53 54 55 56 57))
+  (aw-ignore-current t)
+  (aw-char-position 'top-left)
   :config
   (set-face-attribute 'aw-leading-char-face nil
+                      :box nil
                       :foreground (nord-color "aurora-0")
-                      :height 2.0)
+                      :height 2.2)
   :bind (("M-o" . ace-window)
 	       ([ersatz-c-return] . ace-window)))
 
@@ -447,6 +469,7 @@ save it in `ffap-file-at-point-line-number' variable."
   (set-face-attribute 'dired-directory nil
                       :foreground (nord-color "aurora-2"))
   (setq dired-use-ls-dired nil
+        dired-listing-switches "-lhA"k
         dired-vc-rename-file t))
 
 (use-package all-the-icons
@@ -1412,6 +1435,7 @@ _v_: visualize mode       _D_: disconnect
                       :inherit 'default
                       :background (nord-color "polar-night-0")
                       :extend t
+                      :box nil
                       :height 1
                       :foreground (nord-color "aurora-3"))
 
