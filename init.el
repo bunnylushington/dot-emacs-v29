@@ -36,10 +36,6 @@
 (if (not (eql system-type 'darwin))
     (advice-add #'kbd :filter-args 'ii/swap-hyper-super))
 
-
-
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; NANO Setup
 ;;
@@ -469,7 +465,7 @@ save it in `ffap-file-at-point-line-number' variable."
   (set-face-attribute 'dired-directory nil
                       :foreground (nord-color "aurora-2"))
   (setq dired-use-ls-dired nil
-        dired-listing-switches "-lhA"k
+        dired-listing-switches "-lhA"
         dired-vc-rename-file t))
 
 (use-package all-the-icons
