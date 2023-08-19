@@ -308,6 +308,7 @@
            (display-buffer-in-side-window)
            (side . bottom)
            (slot . 2)
+           (window-width . 100)
            (window-height . 15))
 
 	      (,(rx (or "*help*"
@@ -326,7 +327,7 @@
          (slot . 1)
          (window-width . 80))
 
-	      (,(rx (or "*deadgrep"
+	      (,(rx (or
 		            "*xref*"
 		            "Magit"
 		            "converge.org"
@@ -334,6 +335,14 @@
 	       (display-buffer-in-side-window)
 	       (side . left)
 	       (slot . 0)
+	       (window-width . 80)
+	       (window-parameters
+	        (no-delete-other-windows . t)))
+
+        (,(rx (or "*deadgrep"))
+         (display-buffer-in-side-window)
+	       (side . left)
+	       (slot . 1)
 	       (window-width . 80)
 	       (window-parameters
 	        (no-delete-other-windows . t)))))
@@ -626,7 +635,6 @@ _v_: visualize mode       _D_: disconnect
 (use-package info
   :config
   (info-initialize))
-
 
 (use-package devdocs
   :straight t
@@ -1742,8 +1750,9 @@ that we can generate a skeleton with the cobracmd yasnippet."
 
 (use-package bookmark+
   :straight t
+  :bind
+  ("<f4>" . bookmark-bmenu-list)
   :custom
-  (bmkp-jump-map-prefix-keys `(,(kbd "<f4>")))
   (bmkp-bookmark-map-prefix-keys `(,(kbd "C-x x") ,(kbd "C-<f4>")))
   (bmkp-prompt-for-tags-flag t)
   :config
