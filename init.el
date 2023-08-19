@@ -422,15 +422,23 @@ save it in `ffap-file-at-point-line-number' variable."
 ;; ruin a perfectly good layout!
 (use-package tab-bar
   :init
-  (setq tab-bar-select-tab-modifiers
-        (if (eq system-type 'darwin) '(super) '(hyper)))
+  ;; (setq tab-bar-select-tab-modifiers
+  ;;       (if (eq system-type 'darwin) '(super) '(hyper)))
 
-  (setq tab-bar-back-button
-        (propertize " ←"
-                    'display '(raise -0.20)))
-  (setq tab-bar-forward-button
-        (propertize "→ "
-                    'display '(raise -0.20)))
+  :custom ((tab-bar-tab-name-format-function
+            #'ii/tab-bar-tab-name-format)
+           (tab-bar-history-mode t)
+           (tab-bar-select-tab-modifiers
+            (if (eq system-type 'darwin) '(super) '(hyper)))
+           (tab-bar-mode 1))
+
+  :config
+  (setq tab-bar-close-button-show nil
+        tab-bar-back-button (propertize " ⮐" 'display '(raise -0.20))
+        tab-bar-forward-button (propertize "⮑ " 'display '(raise -0.20))
+        tab-bar-tab-hints t
+        tab-bar-format '(" " tab-bar-format-history
+                         tab-bar-format-tabs-groups))
 
   (defun ii/tab-bar-tab-name-format (tab i)
     (let ((current-p (eq (car tab) 'current-tab)))
@@ -440,16 +448,7 @@ save it in `ffap-file-at-point-line-number' variable."
        'display '(raise -0.25)
        'face (funcall tab-bar-tab-face-function tab))))
 
-  :custom ((tab-bar-tab-name-format-function
-            #'ii/tab-bar-tab-name-format)
-           (tab-bar-history-mode t)
-           (tab-bar-mode 1))
 
-  :config
-  (setq tab-bar-close-button-show nil
-        tab-bar-tab-hints t
-        tab-bar-format '(" " tab-bar-format-history
-                         tab-bar-format-tabs-groups))
   (set-face-attribute 'tab-bar nil
                       :height 1.1
                       :inherit 'default
