@@ -1,3 +1,5 @@
+;; (https://github.com/d12frosted/homebrew-emacs-plus)
+
 ;; Bootstrap straight.el
 ;; https://github.com/radian-software/straight.el
 (defvar bootstrap-version)
@@ -414,23 +416,52 @@ save it in `ffap-file-at-point-line-number' variable."
 
   ) ;;; end (use-package emacs ...)
 
+
+;; Note the use of tab-bar-history-mode.  C-c → and C-c ← will step
+;; through the tab's window configurations.  Handy if you C-x 1 and
+;; ruin a perfectly good layout!
 (use-package tab-bar
   :init
-  (setq tab-bar-select-tab-modifiers '(super))
+  (setq tab-bar-select-tab-modifiers
+        (if (eq system-type 'darwin) '(super) '(hyper)))
+
+  (setq tab-bar-back-button
+        (propertize " ←"
+                    'display '(raise -0.20)))
+  (setq tab-bar-forward-button
+        (propertize "→ "
+                    'display '(raise -0.20)))
+
+  (defun ii/tab-bar-tab-name-format (tab i)
+    (let ((current-p (eq (car tab) 'current-tab)))
+      (propertize
+       (concat (if tab-bar-tab-hints (format " %d ⋅ " i) "")
+               (alist-get 'name tab))
+       'display '(raise -0.25)
+       'face (funcall tab-bar-tab-face-function tab))))
+
+  :custom ((tab-bar-tab-name-format-function
+            #'ii/tab-bar-tab-name-format)
+           (tab-bar-history-mode t)
+           (tab-bar-mode 1))
+
   :config
   (setq tab-bar-close-button-show nil
+        tab-bar-tab-hints t
         tab-bar-format '(" " tab-bar-format-history
                          tab-bar-format-tabs-groups))
   (set-face-attribute 'tab-bar nil
-                      :height 1.3
-                      :inherit 'variable-pitch
+                      :height 1.1
+                      :inherit 'default
                       :foreground (nord-color "snow-storm-0")
-                      :background (nord-color "polar-night-2"))
+                      :background (nord-color "polar-night-0"))
+  (set-face-attribute 'tab-bar-tab nil
+                      :inherit 'default
+                      :box nil)
   (set-face-attribute 'tab-bar-tab-inactive nil
+                      :inherit 'tab-bar
                       :foreground (nord-color "polar-night-1")
-                      :background (nord-color "polar-night-2")
-                      :inherit 'tab-bar))
-
+                      :background 'unspecified))
 
 (use-package view
   :bind (("<f3>" . view-mode))
@@ -448,7 +479,7 @@ save it in `ffap-file-at-point-line-number' variable."
   :straight t
   :custom
   (aw-keys '(49 50 51 52 53 54 55 56 57))
-  (aw-ignore-current t)
+  (aw-ignore-current nil)
   (aw-char-position 'top-left)
   :config
   (set-face-attribute 'aw-leading-char-face nil
