@@ -677,6 +677,7 @@ _v_: visualize mode       _D_: disconnect
   (set-face-attribute 'shr-link nil
                       :foreground (nord-color "frost-3"))
   (set-face-attribute 'devdocs-code-block nil
+                      :extend t
                       :foreground (nord-color "aurora-3")
                       :background (nord-color "polar-night-0"))
 
