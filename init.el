@@ -319,19 +319,19 @@
 	       (slot . 0)
 	       (window-width . 80))
 
-        (,(rx (or "*devdocs*"
-                  (seq "*Customize" anychar)))
-         (display-buffer-reuse-window
-          display-buffer-in-side-window)
-         (side . right)
-         (slot . 1)
-         (window-width . 80))
+          (,(rx (or "*devdocs*"
+                    (seq "*Customize" anychar)))
+           (display-buffer-reuse-window
+            display-buffer-in-side-window)
+           (side . right)
+           (slot . 1)
+           (window-width . 80))
 
 	      (,(rx (or
-		            "*xref*"
-		            "Magit"
-		            "converge.org"
-		            "COMMIT_EDITMSG"))
+		         "*xref*"
+		         "Magit"
+		         "converge.org"
+		         "COMMIT_EDITMSG"))
 	       (display-buffer-in-side-window)
 	       (side . left)
 	       (slot . 0)
@@ -339,8 +339,8 @@
 	       (window-parameters
 	        (no-delete-other-windows . t)))
 
-        (,(rx (or "*deadgrep"))
-         (display-buffer-in-side-window)
+          (,(rx (or "*deadgrep"))
+           (display-buffer-in-side-window)
 	       (side . left)
 	       (slot . 1)
 	       (window-width . 80)
@@ -637,8 +637,26 @@ _v_: visualize mode       _D_: disconnect
   :config
   (info-initialize))
 
+
 (use-package devdocs
   :straight t
+  :init
+  (defun ii/nano-modeline-devdocs ()
+    (funcall nano-modeline-position
+             '((nano-modeline-buffer-status "++") " "
+               (ii/devdocs-path))
+             '((nano-modeline-cursor-position)
+               (nano-modeline-window-dedicated))))
+
+  (defun ii/devdocs-path ()
+    (let-alist (car devdocs--stack)
+      (propertize (concat (devdocs--doc-title .doc)
+                          (and .type devdocs-separator) .type
+                          devdocs-separator (or .name .path))
+                  'face nano-modeline-base-face)))
+
+  (setq devdocs-header-line '(:eval (ii/nano-modeline-devdocs)))
+
   :custom
   ((shr-use-colors nil)
    (shr-use-fonts nil)
