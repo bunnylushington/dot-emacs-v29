@@ -1747,16 +1747,23 @@ that we can generate a skeleton with the cobracmd yasnippet."
         (add-to-list 'outputs (car record))))
     outputs))
 
-
+;; the :init section here is intentionally not refactored
 (use-package bookmark+
   :straight t
-  :bind
-  ("<f4>" . bookmark-bmenu-list)
+  :init
+  (defun ii/bmkp-autoname-bookmark-function (position)
+    (let* ((prj (ii/project-current-short-name))
+           (prj-label (if (not (null prj)) (format "[%s] " prj))))
+      (format "👀 %s%s (%d)" prj-label (buffer-file-name) (abs position))))
+  (customize-set-variable 'bmkp-autoname-format "^👀 .*$")
+  (customize-set-value 'bmkp-autoname-bookmark-function
+                       #'ii/bmkp-autoname-bookmark-function)
+  (global-set-key (kbd "<f4>") #'edit-bookmarks)
   :custom
-  (bmkp-bookmark-map-prefix-keys `(,(kbd "C-x x") ,(kbd "C-<f4>")))
   (bmkp-prompt-for-tags-flag t)
   :config
   (add-hook 'go-ts-mode-hook #'bmkp-automatic-bookmark-mode)
+
 
   (set-face-attribute 'bmkp-url nil
                       :foreground (nord-color "frost-3"))
