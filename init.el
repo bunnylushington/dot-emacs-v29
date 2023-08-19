@@ -897,6 +897,8 @@ _v_: visualize mode       _D_: disconnect
   (add-to-list 'auto-mode-alist '("\\.t$"  . cperl-mode))
   (add-to-list 'auto-mode-alist '("\\.p[lm]" . cperl-mode)))
 
+(use-package nginx-mode
+  :straight t)
 
 (use-package web-mode
   :straight t
