@@ -1758,7 +1758,7 @@ that we can generate a skeleton with the cobracmd yasnippet."
   (customize-set-variable 'bmkp-autoname-format "^👀 .*$")
   (customize-set-value 'bmkp-autoname-bookmark-function
                        #'ii/bmkp-autoname-bookmark-function)
-  (global-set-key (kbd "<f4>") #'edit-bookmarks)
+  (global-set-key (kbd "<f4>") #'bookmark-bmenu-list)
   :custom
   (bmkp-prompt-for-tags-flag t)
   :config
