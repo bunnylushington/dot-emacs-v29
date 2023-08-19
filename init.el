@@ -660,6 +660,7 @@ _v_: visualize mode       _D_: disconnect
   :custom
   ((shr-use-colors nil)
    (shr-use-fonts nil)
+   (shr-max-width 78)
    (devdocs-window-select t))
   :config
   (set-face-attribute 'shr-h1 nil
