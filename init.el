@@ -1437,7 +1437,7 @@ _v_: visualize mode       _D_: disconnect
   (define-key lui-mode-map (kbd "M-<return>") 'lui-send-input)
   (setq
    lui-fill-column 78
-   lui-time-stamp-position nil
+   lui-time-stamp-position 'right-margin
    lui-flyspell-p nil
    lui-fill-type nil
    slack-log-level 'error
