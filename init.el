@@ -495,6 +495,7 @@ save it in `ffap-file-at-point-line-number' variable."
   :custom
   (aw-keys '(49 50 51 52 53 54 55 56 57))
   (aw-ignore-current nil)
+  (aw-leading-char-style 'path)
   (aw-char-position 'top-left)
   :config
   (set-face-attribute 'aw-leading-char-face nil
