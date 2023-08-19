@@ -318,6 +318,14 @@
 	       (slot . 0)
 	       (window-width . 80))
 
+        (,(rx (or "*devdocs*"
+                  (seq "*Customize" anychar)))
+         (display-buffer-reuse-window
+          display-buffer-in-side-window)
+         (side . right)
+         (slot . 1)
+         (window-width . 80))
+
 	      (,(rx (or "*deadgrep"
 		            "*xref*"
 		            "Magit"
@@ -447,7 +455,6 @@ save it in `ffap-file-at-point-line-number' variable."
                (alist-get 'name tab))
        'display '(raise -0.25)
        'face (funcall tab-bar-tab-face-function tab))))
-
 
   (set-face-attribute 'tab-bar nil
                       :height 1.1
@@ -623,6 +630,29 @@ _v_: visualize mode       _D_: disconnect
 
 (use-package devdocs
   :straight t
+  :custom
+  ((shr-use-colors nil)
+   (shr-use-fonts nil)
+   (devdocs-window-select t))
+  :config
+  (set-face-attribute 'shr-h1 nil
+                      :height 1.5
+                      :foreground (nord-color "aurora-1"))
+  (set-face-attribute 'shr-h2 nil
+                      :height 1.3
+                      :foreground (nord-color "aurora-2"))
+  (set-face-attribute 'shr-h3 nil
+                      :height 1.2
+                      :weight 'bold
+                      :foreground (nord-color "frost-0"))
+  (set-face-attribute 'shr-h4 nil
+                      :foreground (nord-color "snow-storm-1"))
+  (set-face-attribute 'shr-link nil
+                      :foreground (nord-color "frost-3"))
+  (set-face-attribute 'devdocs-code-block nil
+                      :foreground (nord-color "aurora-3")
+                      :background (nord-color "polar-night-0"))
+
   :bind ("C-h C-j" . devdocs-lookup))
 
 
