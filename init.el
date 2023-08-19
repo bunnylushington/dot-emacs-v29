@@ -1616,11 +1616,13 @@ _v_: visualize mode       _D_: disconnect
   '((t (:inherit default-face :height 30)))
   "Intra-message spacing.")
 
+(set-face-attribute 'slack-new-message-marker-face nil
+                    :height 3.0)
+
 (defun ii/lui-message-separator ()
   "Add space after incoming message"
   (insert (propertize "\n" 'face 'ii/lui-message-separator-face)))
-
-;; (add-hook 'lui-post-output-hook 'ii/lui-message-separator)
+(add-hook 'lui-post-output-hook 'ii/lui-message-separator)
 
 
 ;; End of Slack configuration
