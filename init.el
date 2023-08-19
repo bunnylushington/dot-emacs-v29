@@ -170,11 +170,11 @@
 
 (use-package emacs
   :bind (("C-M-SPC" . cycle-spacing)
-	       ("<f5>" . scratch-buffer)
-	       ("C-+" . text-scale-increase)
-	       ("C--" . text-scale-decrease)
-	       ("C-=" . ii/text-scale-reset)
-	       ("C-c w" . display-fill-column-indicator-mode))
+	     ("<f5>" . scratch-buffer)
+	     ("C-+" . text-scale-increase)
+	     ("C--" . text-scale-decrease)
+	     ("C-=" . ii/text-scale-reset)
+	     ("C-c w" . display-fill-column-indicator-mode))
 
   :hook ((after-save . executable-make-buffer-file-executable-if-script-p))
 
@@ -240,9 +240,9 @@
   (setq custom-file (ii/emacs-dir-file "custom-file.el"))
 
   (setq ii/exec-path
-	      `("/usr/local/bin"
-	        "/opt/homebrew/bin"
-	        ,(ii/home-dir-file "go/bin")))
+	    `("/usr/local/bin"
+	      "/opt/homebrew/bin"
+	      ,(ii/home-dir-file "go/bin")))
   (mapc (lambda (path) (add-to-list 'exec-path path)) ii/exec-path)
 
   (defun ii/text-scale-reset ()
@@ -277,57 +277,63 @@
 
   ;; Windowing
   (setq switch-to-buffer-obey-display-actions t
-	      switch-to-buffer-in-dedicated-window 'pop)
+	    switch-to-buffer-in-dedicated-window 'pop)
 
   (setq display-buffer-alist
-	      `((,(rx (or "vterm"
-		                "VTerm"))
-	         (display-buffer-reuse-window))
+	    `((,(rx (or "vterm"
+		            "VTerm"))
+	       (display-buffer-reuse-window))
 
-	        (,(rx (or "*detached shell command*"
-		                "*detached-session-output"
-		                "cmd: " ;; for specially named detached shell commands
-		                "*detached-list*"
-		                "*Flycheck errors*"))
-	         (display-buffer-in-side-window)
-	         (side . bottom)
-	         (slot . 0)
-	         (window-height . 15))
+	      (,(rx (or "*detached shell command*"
+		            "*detached-session-output"
+		            "cmd: " ;; for specially named detached shell commands
+		            "*detached-list*"
+		            "*Flycheck errors*"))
+	       (display-buffer-in-side-window)
+	       (side . bottom)
+	       (slot . 0)
+	       (window-height . 15))
 
-          ;; restclient mode; bookmarks
-            (,(rx (or "*HTTP Response*"
-                      "*Bookmark List*"))
+          ;; diags; restclient resp
+          (,(rx (or "*HTTP Response*"
+                    "*lsp-diagnostics*"))
            (display-buffer-in-side-window)
            (side . bottom)
            (slot . 1)
            (window-height . 15))
 
-	        (,(rx (or "*help*"
-		                "*info*"))
-	         (display-buffer-reuse-window
-	          display-buffer-in-side-window)
-	         (side . right)
-	         (slot . 0)
-	         (window-width . 80))
+          (,(rx (or "*Bookmark List*"))
+           (display-buffer-in-side-window)
+           (side . bottom)
+           (slot . 2)
+           (window-height . 15))
 
-	        (,(rx (or "*deadgrep"
-		                "*xref*"
-		                "Magit"
-		                "converge.org"
-		                "COMMIT_EDITMSG"))
-	         (display-buffer-in-side-window)
-	         (side . left)
-	         (slot . 0)
-	         (window-width . 80)
-	         (window-parameters
-	          (no-delete-other-windows . t)))))
+	      (,(rx (or "*help*"
+		            "*info*"))
+	       (display-buffer-reuse-window
+	        display-buffer-in-side-window)
+	       (side . right)
+	       (slot . 0)
+	       (window-width . 80))
+
+	      (,(rx (or "*deadgrep"
+		            "*xref*"
+		            "Magit"
+		            "converge.org"
+		            "COMMIT_EDITMSG"))
+	       (display-buffer-in-side-window)
+	       (side . left)
+	       (slot . 0)
+	       (window-width . 80)
+	       (window-parameters
+	        (no-delete-other-windows . t)))))
 
   (defun ii/close-help-window ()
     "Close all *Help* windows."
     (interactive)
     (dolist (win (window-list))
       (if (equal "*Help*" (buffer-name (window-buffer win)))
-	        (delete-window win))))
+	      (delete-window win))))
   (global-set-key [ersatz-c-z] 'ii/close-help-window)
 
   ;; Some backup magic.  I hate losing things.
@@ -352,18 +358,18 @@ save it in `ffap-file-at-point-line-number' variable."
            (name
             (or (condition-case nil
                     (and (not (string-match "//" string)) ; foo.com://bar
-			                   (substitute-in-file-name string))
+			             (substitute-in-file-name string))
                   (error nil))
-		            string))
+		        string))
            (line-number-string
             (and (string-match ":[0-9]+" name)
-		             (substring name (1+ (match-beginning 0)) (match-end 0))))
+		         (substring name (1+ (match-beginning 0)) (match-end 0))))
            (line-number
             (and line-number-string
-		             (string-to-number line-number-string))))
+		         (string-to-number line-number-string))))
       (if (and line-number (> line-number 0))
           (setq ffap-file-at-point-line-number line-number)
-	      (setq ffap-file-at-point-line-number nil))))
+	    (setq ffap-file-at-point-line-number nil))))
 
   (defadvice find-file-at-point (after ffap-goto-line-number activate)
     "If `ffap-file-at-point-line-number' is non-nil goto this line."
@@ -373,6 +379,11 @@ save it in `ffap-file-at-point-line-number' variable."
   ;;
   ;; End of ffap advice
   ;;
+
+  (global-set-key (kbd "S-C-<left>") 'shrink-window-horizontally)
+  (global-set-key (kbd "S-C-<right>") 'enlarge-window-horizontally)
+  (global-set-key (kbd "S-C-<down>") 'shrink-window)
+  (global-set-key (kbd "S-C-<up>") 'enlarge-window)
 
 
   ;;
@@ -445,18 +456,18 @@ save it in `ffap-file-at-point-line-number' variable."
                       :foreground (nord-color "aurora-0")
                       :height 2.2)
   :bind (("M-o" . ace-window)
-	       ([ersatz-c-return] . ace-window)))
+	     ([ersatz-c-return] . ace-window)))
 
 (use-package zoom-window
   :straight t
   :bind (("M-z" . zoom-window-zoom)
-	       ([ersatz-m-z] . zoom-window-zoom))
+	     ([ersatz-m-z] . zoom-window-zoom))
   :config
   (defun ii/enlarge-on-zoom (&rest r)
     "When zooming a window, enlarge the text; reverse the
  modification when the window is un-zoomed."
     (if (zoom-window--enable-p)
-	      (text-scale-set 2)
+	    (text-scale-set 2)
       (text-scale-set 0)))
   (advice-add #'zoom-window-zoom :after #'ii/enlarge-on-zoom))
 
@@ -537,8 +548,8 @@ save it in `ffap-file-at-point-line-number' variable."
   :bind ("s-p" . ii/crdt/body)
   :config
   (defhydra ii/crdt (:color pink
-			                      :hint nil
-			                      :exit t)
+			                :hint nil
+			                :exit t)
     "
 CRDT Actions
 
@@ -956,21 +967,21 @@ _v_: visualize mode       _D_: disconnect
 (use-package treesit
   :init
   (setq treesit-language-source-alist
-   '((bash "https://github.com/tree-sitter/tree-sitter-bash")
-     (cmake "https://github.com/uyha/tree-sitter-cmake")
-     (css "https://github.com/tree-sitter/tree-sitter-css")
-     (elisp "https://github.com/Wilfred/tree-sitter-elisp")
-     (go "https://github.com/tree-sitter/tree-sitter-go")
-     (html "https://github.com/tree-sitter/tree-sitter-html")
-     (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
-     (json "https://github.com/tree-sitter/tree-sitter-json")
-     (make "https://github.com/alemuller/tree-sitter-make")
-     (markdown "https://github.com/ikatyang/tree-sitter-markdown")
-     (python "https://github.com/tree-sitter/tree-sitter-python")
-     (toml "https://github.com/tree-sitter/tree-sitter-toml")
-     (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
-     (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
-     (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
+        '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+          (cmake "https://github.com/uyha/tree-sitter-cmake")
+          (css "https://github.com/tree-sitter/tree-sitter-css")
+          (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+          (go "https://github.com/tree-sitter/tree-sitter-go")
+          (html "https://github.com/tree-sitter/tree-sitter-html")
+          (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+          (json "https://github.com/tree-sitter/tree-sitter-json")
+          (make "https://github.com/alemuller/tree-sitter-make")
+          (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+          (python "https://github.com/tree-sitter/tree-sitter-python")
+          (toml "https://github.com/tree-sitter/tree-sitter-toml")
+          (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+          (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+          (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
   )
 
 (use-package treesit-auto
@@ -1634,10 +1645,10 @@ that we can generate a skeleton with the cobracmd yasnippet."
            (token (replace-regexp-in-string "\n" "" sub)))
       (message token)
       (request
-       "https://www.googleapis.com/oauth2/v1/tokeninfo"
-       :params `(("access_token" . ,token))
-       :error #'output-fn
-       :success #'output-fn)
+        "https://www.googleapis.com/oauth2/v1/tokeninfo"
+        :params `(("access_token" . ,token))
+        :error #'output-fn
+        :success #'output-fn)
       t)))
 
 
@@ -1728,11 +1739,11 @@ Completion is available."))
             (format "Saved current directory in bookmark %s" name))
         (error "You must enter a bookmark name")))
      (t
-       ;; Check whether an existing bookmark has been specified
-       (if (setq filename (bookmark-get-filename bookmark))
-           ;; If it points to a directory, change to it.
-           (if (file-directory-p filename)
-               (eshell/cd filename)
-             ;; otherwise, just jump to the bookmark
-             (bookmark-jump bookmark))
-         (error "%s is not a bookmark" bookmark))))))
+      ;; Check whether an existing bookmark has been specified
+      (if (setq filename (bookmark-get-filename bookmark))
+          ;; If it points to a directory, change to it.
+          (if (file-directory-p filename)
+              (eshell/cd filename)
+            ;; otherwise, just jump to the bookmark
+            (bookmark-jump bookmark))
+        (error "%s is not a bookmark" bookmark))))))
