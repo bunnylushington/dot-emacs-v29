@@ -1501,6 +1501,18 @@ _v_: visualize mode       _D_: disconnect
                 (insert "\n"))
               (setq buffer-read-only t)))))))
 
+  (defface ii/lui-message-separator-face
+    '((t (:inherit default-face :height 30)))
+    "Intra-message spacing.")
+
+  (set-face-attribute 'slack-new-message-marker-face nil
+                      :height 3.0)
+
+  (defun ii/lui-message-separator ()
+    "Add space after incoming message"
+    (insert (propertize "\n" 'face 'ii/lui-message-separator-face)))
+  (add-hook 'lui-post-output-hook 'ii/lui-message-separator)
+
 
   (defun ii/lui-setup ()
     (setq fringes-outside-margins nil
@@ -1631,17 +1643,6 @@ _v_: visualize mode       _D_: disconnect
 ;; ---- Add a small amount of space between consecutive messages.
 ;; ---- This interferes with the "New Message" overlay that lives at
 ;; ---- the bottom of the Slack buffer.  I'm okay with that for now.
-(defface ii/lui-message-separator-face
-  '((t (:inherit default-face :height 30)))
-  "Intra-message spacing.")
-
-(set-face-attribute 'slack-new-message-marker-face nil
-                    :height 3.0)
-
-(defun ii/lui-message-separator ()
-  "Add space after incoming message"
-  (insert (propertize "\n" 'face 'ii/lui-message-separator-face)))
-(add-hook 'lui-post-output-hook 'ii/lui-message-separator)
 
 
 ;; End of Slack configuration
@@ -1771,7 +1772,8 @@ that we can generate a skeleton with the cobracmd yasnippet."
 ;; the :init section here is intentionally not refactored
 (use-package bookmark+
   :straight t
-  :init
+  :demand t
+  :config
   (defun ii/bmkp-autoname-bookmark-function (position)
     (let* ((prj (ii/project-current-short-name))
            (prj-label (if (not (null prj)) (format "[%s] " prj))))
@@ -1780,11 +1782,8 @@ that we can generate a skeleton with the cobracmd yasnippet."
   (customize-set-value 'bmkp-autoname-bookmark-function
                        #'ii/bmkp-autoname-bookmark-function)
   (global-set-key (kbd "<f4>") #'bookmark-bmenu-list)
-  :custom
-  (bmkp-prompt-for-tags-flag t)
-  :config
-  (add-hook 'go-ts-mode-hook #'bmkp-automatic-bookmark-mode)
 
+  (add-hook 'go-ts-mode-hook #'bmkp-automatic-bookmark-mode)
 
   (set-face-attribute 'bmkp-url nil
                       :foreground (nord-color "frost-3"))
