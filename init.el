@@ -434,6 +434,7 @@ save it in `ffap-file-at-point-line-number' variable."
   ) ;;; end (use-package emacs ...)
 
 
+
 ;; Note the use of tab-bar-history-mode.  C-c → and C-c ← will step
 ;; through the tab's window configurations.  Handy if you C-x 1 and
 ;; ruin a perfectly good layout!
@@ -454,8 +455,46 @@ save it in `ffap-file-at-point-line-number' variable."
         tab-bar-back-button (propertize " ⮐" 'display '(raise -0.20))
         tab-bar-forward-button (propertize "⮑ " 'display '(raise -0.20))
         tab-bar-tab-hints t
-        tab-bar-format '(" " tab-bar-format-history
-                         tab-bar-format-tabs-groups))
+        tab-bar-format '(" "
+                         tab-bar-format-history
+                         tab-bar-format-tabs
+                         tab-bar-format-align-right
+                         ii/tab-bar-org-clock
+                         "  "
+                         ))
+
+  (defvar ii/timeclock-in-arrow
+    (propertize " ➕ " 'display '(raise -0.20)))
+
+  (defun ii/sanitized-org-clock-current-task ()
+    "If there's a current org-clock task, display it."
+    (when (and (boundp 'org-clock-current-task) org-clock-current-task)
+      (let* ((plain-task (substring-no-properties org-clock-current-task))
+             (display-task (s-join " " (cdr (s-split " " plain-task)))))
+        (propertize display-task 'display '(raise -0.20)))))
+
+  (defun ii/tab-bar-org-clock ()
+    "Punch in/out in the tab-bar"
+    `((ii/timeclock-out
+       menu-item ,(ii/sanitized-org-clock-current-task) ii/timeclock-out
+       :help "Punch out of this task.")
+      (ii/timeclock-in
+       menu-item ,ii/timeclock-in-arrow ii/timeclock-in
+       :help "Punch into new task.")))
+
+  (defun ii/timeclock-out ()
+    "Punch out of timeclock task."
+    (interactive)
+    (org-clock-out)
+    (save-excursion
+      (org-journal-open-current-journal-file)
+      (save-buffer)
+      (delete-window)))
+
+  (defun ii/timeclock-in ()
+    "Punch into a timeclock task."
+    (interactive)
+    (call-interactively #'org-journal-new-entry))
 
   (defun ii/tab-bar-tab-name-format (tab i)
     (let ((current-p (eq (car tab) 'current-tab)))
@@ -1412,7 +1451,32 @@ _v_: visualize mode       _D_: disconnect
   (set-face-attribute 'org-date nil :inherit 'org-drawer)
   (set-face-attribute 'org-date nil :inherit 'org-drawer)
   (set-face-attribute 'org-special-keyword nil :inherit 'org-drawer)
+  (set-face-attribute 'org-block nil
+                      :background (nord-color "polar-night-0")
+                      :inherit 'fixed-pitch)
   ) ;; End of Org configuration
+
+(use-package org-journal
+  :straight t
+  :custom
+  ((org-journal-dir (expand-file-name "org-journal" user-emacs-directory))
+   (org-journal-file-type 'yearly))
+  :config
+  (defvar ii/agenda-task-history nil)
+  (defun ii/journal-entry-clock-in ()
+    "A hook function.
+
+Prompts for a new task (headline) for the org-journal, inserts
+that after the timestamp, clocks in, saves the journal, and
+deletes the window.  This is meant to be used in conjunction with
+ii/timeclock-in."
+    (save-excursion
+      (let ((task (read-string "Task: " nil ii/agenda-task-history)))
+        (insert task)
+        (org-clock-in)
+        (save-buffer)
+        (delete-window))))
+  (add-hook 'org-journal-after-entry-create-hook #'ii/journal-entry-clock-in))
 
 (use-package org-bullets
   :straight t
