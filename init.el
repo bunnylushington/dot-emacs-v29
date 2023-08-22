@@ -1824,7 +1824,10 @@ that we can generate a skeleton with the cobracmd yasnippet."
   (defun ii/bmkp-autoname-bookmark-function (position)
     (let* ((prj (ii/project-current-short-name))
            (prj-label (if (not (null prj)) (format "[%s] " prj))))
-      (format "👀 %s%s (%d)" prj-label (buffer-file-name) (abs position))))
+      (format "👀 %s%s (%d)"
+              prj-label
+              (abbreviate-file-name (buffer-file-name))
+              (abs position))))
   (customize-set-variable 'bmkp-autoname-format "^👀 .*$")
   (customize-set-value 'bmkp-autoname-bookmark-function
                        #'ii/bmkp-autoname-bookmark-function)
