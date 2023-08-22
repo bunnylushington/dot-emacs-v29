@@ -304,7 +304,8 @@
            (slot . 1)
            (window-height . 15))
 
-          (,(rx (or "*Bookmark List*"))
+          (,(rx (or "*Bookmark List*"
+                    "*CRDT Buffers"))
            (display-buffer-in-side-window)
            (side . bottom)
            (slot . 2)
@@ -1815,6 +1816,16 @@ that we can generate a skeleton with the cobracmd yasnippet."
       (let ((record (split-string src ",")))
         (add-to-list 'outputs (car record))))
     outputs))
+
+(use-package tabulated-list
+  :init
+  (add-hook 'tabulated-list-mode-hook
+          (lambda () (setq tabulated-list-use-header-line nil))))
+
+(use-package ediff
+  :init
+  (setq ediff-window-setup-function
+        #'ediff-setup-windows-plain))
 
 ;; the :init section here is intentionally not refactored
 (use-package bookmark+
