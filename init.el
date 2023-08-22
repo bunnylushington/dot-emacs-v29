@@ -502,14 +502,15 @@ save it in `ffap-file-at-point-line-number' variable."
   (set-face-attribute 'tab-bar nil
                       :height 1.1
                       :inherit 'default
-                      :foreground (nord-color "snow-storm-0")
+                      :foreground (nord-color "frost-0")
                       :background (nord-color "polar-night-0"))
   (set-face-attribute 'tab-bar-tab nil
                       :inherit 'default
+                      :foreground 'unspecified
                       :box nil)
   (set-face-attribute 'tab-bar-tab-inactive nil
                       :inherit 'tab-bar
-                      :foreground (nord-color "polar-night-1")
+                      :foreground (nord-color "frost-2")
                       :background 'unspecified))
 
 (use-package view
