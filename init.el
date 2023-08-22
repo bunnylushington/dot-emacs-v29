@@ -434,11 +434,20 @@ save it in `ffap-file-at-point-line-number' variable."
   ) ;;; end (use-package emacs ...)
 
 
+(use-package timeclock
+  :straight '(timeclock
+              :type git
+              :host github
+              :repo "bunnylushington/timeclock")
+  :init
+  (setq timeclock/db-file
+        (expand-file-name "timeclock.db" user-emacs-directory)))
 
 ;; Note the use of tab-bar-history-mode.  C-c → and C-c ← will step
 ;; through the tab's window configurations.  Handy if you C-x 1 and
 ;; ruin a perfectly good layout!
 (use-package tab-bar
+  :after timeclock
   :init
   ;; (setq tab-bar-select-tab-modifiers
   ;;       (if (eq system-type 'darwin) '(super) '(hyper)))
@@ -459,42 +468,28 @@ save it in `ffap-file-at-point-line-number' variable."
                          tab-bar-format-history
                          tab-bar-format-tabs
                          tab-bar-format-align-right
-                         ii/tab-bar-org-clock
+                         ii/tab-bar-timeclock
                          "  "
                          ))
 
   (defvar ii/timeclock-in-arrow
     (propertize " ➕ " 'display '(raise -0.20)))
 
-  (defun ii/sanitized-org-clock-current-task ()
-    "If there's a current org-clock task, display it."
-    (when (and (boundp 'org-clock-current-task) org-clock-current-task)
-      (let* ((plain-task (substring-no-properties org-clock-current-task))
-             (display-task (s-join " " (cdr (s-split " " plain-task)))))
-        (propertize display-task 'display '(raise -0.20)))))
+  (defun ii/timeclock-active-task ()
+    "If there's a current timeclock  task, display it."
+    (when (fboundp #'timeclock/active-task-name)
+      (let ((task (timeclock/active-task-name)))
+        (if (not (null task))
+            (propertize task 'display '(raise -0.20))))))
 
-  (defun ii/tab-bar-org-clock ()
+  (defun ii/tab-bar-timeclock ()
     "Punch in/out in the tab-bar"
     `((ii/timeclock-out
-       menu-item ,(ii/sanitized-org-clock-current-task) ii/timeclock-out
+       menu-item ,(ii/timeclock-active-task) timeclock/punch-out
        :help "Punch out of this task.")
       (ii/timeclock-in
-       menu-item ,ii/timeclock-in-arrow ii/timeclock-in
+       menu-item ,ii/timeclock-in-arrow timeclock/punch-in
        :help "Punch into new task.")))
-
-  (defun ii/timeclock-out ()
-    "Punch out of timeclock task."
-    (interactive)
-    (org-clock-out)
-    (save-excursion
-      (org-journal-open-current-journal-file)
-      (save-buffer)
-      (delete-window)))
-
-  (defun ii/timeclock-in ()
-    "Punch into a timeclock task."
-    (interactive)
-    (call-interactively #'org-journal-new-entry))
 
   (defun ii/tab-bar-tab-name-format (tab i)
     (let ((current-p (eq (car tab) 'current-tab)))
@@ -1456,28 +1451,6 @@ _v_: visualize mode       _D_: disconnect
                       :inherit 'fixed-pitch)
   ) ;; End of Org configuration
 
-(use-package org-journal
-  :straight t
-  :custom
-  ((org-journal-dir (expand-file-name "org-journal" user-emacs-directory))
-   (org-journal-file-type 'yearly))
-  :config
-  (defvar ii/agenda-task-history nil)
-  (defun ii/journal-entry-clock-in ()
-    "A hook function.
-
-Prompts for a new task (headline) for the org-journal, inserts
-that after the timestamp, clocks in, saves the journal, and
-deletes the window.  This is meant to be used in conjunction with
-ii/timeclock-in."
-    (save-excursion
-      (let ((task (read-string "Task: " nil ii/agenda-task-history)))
-        (insert task)
-        (org-clock-in)
-        (save-buffer)
-        (delete-window))))
-  (add-hook 'org-journal-after-entry-create-hook #'ii/journal-entry-clock-in))
-
 (use-package org-bullets
   :straight t
   :hook (org-mode . org-bullets-mode)
@@ -1581,7 +1554,6 @@ ii/timeclock-in."
     (insert (propertize "\n" 'face 'ii/lui-message-separator-face)))
   (add-hook 'lui-post-output-hook 'ii/lui-message-separator)
 
-
   (defun ii/lui-setup ()
     (setq fringes-outside-margins nil
           right-margin-width 8
@@ -1633,6 +1605,7 @@ ii/timeclock-in."
   _u_: unread rooms        _c_: compose in buffer
   _i_: select IM           _t_: show/create thread
   _r_: select room         _y_: region to code block
+  _p_: edit message
   "
     ("a" slack-all-threads)
     ("u" slack-select-unread-rooms)
@@ -1642,6 +1615,7 @@ ii/timeclock-in."
     ("c" slack-message-write-another-buffer)
     ("t" slack-thread-show-or-create)
     ("y" ii/slack-copy-to-buffer)
+    ("p" slack-message-edit)
     ("q" nil "quit" :color blue))
 
 
@@ -1705,15 +1679,19 @@ ii/timeclock-in."
             (let ((url (read-from-minibuffer "URL: ")))
               (link text url)))))))
 
-  (define-key lui-mode-map (kbd "M-k") 'ii/lui-add-link))
+  (define-key lui-mode-map (kbd "M-k") 'ii/lui-add-link)
 
 
-;; ---- Add a small amount of space between consecutive messages.
-;; ---- This interferes with the "New Message" overlay that lives at
-;; ---- the bottom of the Slack buffer.  I'm okay with that for now.
+  (defun ii/nano-modeline-slack-buffer-mode ()
+    "Nano line for slack buffer modes"
+    (funcall nano-modeline-position
+             '((nano-modeline-buffer-status "--") " "
+               (nano-modeline-buffer-name))
+             '((nano-modeline-window-dedicated))))
+  (add-hook 'slack-buffer-mode-hook #'ii/nano-modeline-slack-buffer-mode)
+  (add-hook 'slack-message-buffer-mode-hook #'ii/nano-modeline-slack-buffer-mode)
 
-
-;; End of Slack configuration
+  ) ;; End of Slack configuration
 
 
 
