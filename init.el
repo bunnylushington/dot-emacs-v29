@@ -1833,7 +1833,10 @@ that we can generate a skeleton with the cobracmd yasnippet."
                        #'ii/bmkp-autoname-bookmark-function)
   (global-set-key (kbd "<f4>") #'bookmark-bmenu-list)
 
-  (add-hook 'go-ts-mode-hook #'bmkp-automatic-bookmark-mode)
+  ;; auto-set bookmarks.
+  (add-hook 'prog-mode-hook #'bmkp-automatic-bookmark-mode)
+  (add-hook 'js-base-mode-hook #'bmkp-automatic-bookmark-mode)
+  (setq bmkp-automatic-bookmark-mode-delay 30)
 
   (set-face-attribute 'bmkp-url nil
                       :foreground (nord-color "frost-3"))
