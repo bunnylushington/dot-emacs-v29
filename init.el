@@ -340,13 +340,23 @@
 	       (window-parameters
 	        (no-delete-other-windows . t)))
 
-          (,(rx (or "*deadgrep"))
+          (,(rx (or "*deadgrep"
+                    "*Forge Repositories*"
+                    "*forge: "))
            (display-buffer-in-side-window)
 	       (side . left)
 	       (slot . 1)
 	       (window-width . 80)
 	       (window-parameters
-	        (no-delete-other-windows . t)))))
+	        (no-delete-other-windows . t)))
+
+          (,(rx (or (seq (+ numeric) ";new-comment")))
+           (display-buffer-in-side-window)
+           (side . left)
+           (slot . 2)
+           (window-width . 80)
+           (window-parameters
+            (no-delete-other-windows . t)))))
 
   (defun ii/close-help-window ()
     "Close all *Help* windows."
@@ -839,11 +849,18 @@ _v_: visualize mode       _D_: disconnect
   :bind (("s-g" . 'magit-status))
   :hook (before-save . magit-wip-commit-initial-backup)
   :config
+  (set-face-attribute 'magit-section-highlight nil
+                      :background (nord-color "polar-night-1"))
+
   (setq magit-commit-show-diff nil)
   (magit-wip-mode 1))
 
 (use-package ghub
   :straight t)
+
+(use-package forge
+  :straight t
+  :after magit)
 
 (use-package diff-hl
   :straight t
