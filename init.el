@@ -1294,8 +1294,8 @@ _v_: visualize mode       _D_: disconnect
               (setq-local corfu-auto nil)
               (corfu-mode)))
 
-  (add-to-list 'eshell-visual-subcommands
-               '("docker" "build" "run"))
+  (setq eshell-visual-subcommands
+        '("docker" "build" "run"))
 
   (defun eshell/gst (&rest args)
     (magit-status (pop args) nil)
