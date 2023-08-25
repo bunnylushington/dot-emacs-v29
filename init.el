@@ -1294,6 +1294,9 @@ _v_: visualize mode       _D_: disconnect
               (setq-local corfu-auto nil)
               (corfu-mode)))
 
+  (add-to-list 'eshell-visual-subcommands
+               '("docker" "build" "run"))
+
   (defun eshell/gst (&rest args)
     (magit-status (pop args) nil)
     (eshell/echo))
@@ -1811,36 +1814,65 @@ that we can generate a skeleton with the cobracmd yasnippet."
 ;;   brew install switchaudio-osx
 ;;   brew tap meowmeowmeowcat/taps
 ;;   brew install meowmeowmeowcat/taps/volume
-(defun ii/audio-output ()
-  (interactive)
-  (let* ((sources (ii/audio-all-outputs))
-         (new-source (completing-read "New source: " sources)))
-    (ii/audio-set-output new-source)))
+;;   https://github.com/kirtan-shah/nowplaying-cli
+(if (eq system-type 'darwin)
+    (progn
 
-(defun ii/audio-set-output (source)
-  (shell-command
-   (format "SwitchAudioSource -s \"%s\"" source)))
+      (defun ii/audio-volume (&optional volume)
+        (interactive "sVolume: ")
+        (shell-command (concat "volume " volume)))
 
-(defun ii/audio-volume (&optional volume)
-  (interactive "sVolume: ")
-  (shell-command (concat "volume " volume)))
+      (defun ii/song-info ()
+        "Display current song information in the echo area."
+        (interactive)
+        (let ((artist (s-chomp (shell-command-to-string "nowplaying-cli get artist")))
+              (album  (s-chomp (shell-command-to-string "nowplaying-cli get album")))
+              (title  (s-chomp (shell-command-to-string "nowplaying-cli get title"))))
+          (message "%s - %s - %s" artist album title)))
 
-(defun ii/audio-all-outputs ()
-  (let ((outputs ())
-        (source-string (shell-command-to-string
-                        "SwitchAudioSource -a -t output -f cli")))
-    (dolist (src (split-string source-string "\n" t " "))
-      (let ((record (split-string src ",")))
-        (add-to-list 'outputs (car record))))
-    outputs))
+      (defun ii/song-pause ()
+        "Pause or resume the music app."
+        (interactive)
+        (shell-command "nowplaying-cli togglePlayPause"))
+
+      (defun ii/audio-output ()
+        (interactive)
+        (let* ((sources (ii/audio-all-outputs))
+               (new-source (completing-read "New source: " sources)))
+          (ii/audio-set-output new-source)))
+
+      (defun ii/audio-set-output (source)
+        (shell-command
+         (format "SwitchAudioSource -s \"%s\"" source)))
+
+      (defun ii/audio-all-outputs ()
+        (let ((outputs ())
+              (source-string (shell-command-to-string
+                              "SwitchAudioSource -a -t output -f cli")))
+          (dolist (src (split-string source-string "\n" t " "))
+            (let ((record (split-string src ",")))
+              (add-to-list 'outputs (car record))))
+          outputs))
+
+      (global-set-key (kbd "<f8>") #'ii/song-pause)
+      (global-set-key (kbd "S-<f8>") #'ii/song-info)))
 
 (use-package tabulated-list
   :init
   (add-hook 'tabulated-list-mode-hook
           (lambda () (setq tabulated-list-use-header-line nil))))
 
+(use-package xkcd
+  :straight t)
+
 (use-package ediff
   :init
+  (defun ii/maybe-close-tab ()
+    (interactive)
+    (if (y-or-n-p "Close this tab?")
+        (tab-bar-close-tab)))
+  (add-hook 'ediff-before-setup-hook #'tab-new)
+  (add-hook 'ediff-quit-hook #'ii/maybe-close-tab)
   (setq ediff-window-setup-function
         #'ediff-setup-windows-plain))
 
@@ -1854,7 +1886,9 @@ that we can generate a skeleton with the cobracmd yasnippet."
            (prj-label (if (not (null prj)) (format "[%s] " prj))))
       (format "👀 %s%s (%d)"
               prj-label
-              (abbreviate-file-name (buffer-file-name))
+              (if (buffer-file-name)
+                  (abbreviate-file-name (buffer-file-name))
+                (buffer-name))
               (abs position))))
   (customize-set-variable 'bmkp-autoname-format "^👀 .*$")
   (customize-set-value 'bmkp-autoname-bookmark-function
