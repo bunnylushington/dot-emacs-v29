@@ -312,15 +312,18 @@
            (window-width . 100)
            (window-height . 15))
 
-	      (,(rx (or "*help*"
-		            "*info*"))
+	        (,(rx (or "*help*"
+                    "*messages*"
+		                "*info*"))
 	       (display-buffer-reuse-window
 	        display-buffer-in-side-window)
 	       (side . right)
 	       (slot . 0)
 	       (window-width . 80))
 
-          (,(rx (or "*devdocs*"
+            (,(rx (or "*devdocs*"
+                      "*Apropos*"
+                    "*timeclock report*"
                     (seq "*Customize" anychar)))
            (display-buffer-reuse-window
             display-buffer-in-side-window)
@@ -340,7 +343,8 @@
 	       (window-parameters
 	        (no-delete-other-windows . t)))
 
-          (,(rx (or "*deadgrep"
+        (,(rx (or "*deadgrep"
+                  "*Occur*"
                     "*Forge Repositories*"
                     "*forge: "))
            (display-buffer-in-side-window)
@@ -444,6 +448,23 @@ save it in `ffap-file-at-point-line-number' variable."
 
   ) ;;; end (use-package emacs ...)
 
+
+(use-package apropos
+  :config
+  (set-face-attribute 'apropos-symbol nil
+                      :foreground (nord-color "aurora-2")
+                      :height 1.2))
+
+(use-package replace
+  :config
+  (defface ii/list-header-face
+    `((t
+       :height 1.2
+       :foreground ,(nord-color "frost-2")))
+    "list-matching-lines-buffer-name-face")
+  (setq list-matching-lines-buffer-name-face 'ii/list-header-face)
+  (set-face-attribute 'lazy-highlight nil
+                      :background (nord-color "polar-night-2")))
 
 (use-package timeclock
   :straight '(timeclock
