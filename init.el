@@ -172,11 +172,11 @@
 
 (use-package emacs
   :bind (("C-M-SPC" . cycle-spacing)
-	     ("<f5>" . scratch-buffer)
-	     ("C-+" . text-scale-increase)
-	     ("C--" . text-scale-decrease)
-	     ("C-=" . ii/text-scale-reset)
-	     ("C-c w" . display-fill-column-indicator-mode))
+	       ("<f5>" . scratch-buffer)
+	       ("C-+" . text-scale-increase)
+	       ("C--" . text-scale-decrease)
+	       ("C-=" . ii/text-scale-reset)
+	       ("C-c w" . display-fill-column-indicator-mode))
 
   :hook ((after-save . executable-make-buffer-file-executable-if-script-p))
 
@@ -242,9 +242,9 @@
   (setq custom-file (ii/emacs-dir-file "custom-file.el"))
 
   (setq ii/exec-path
-	    `("/usr/local/bin"
-	      "/opt/homebrew/bin"
-	      ,(ii/home-dir-file "go/bin")))
+	      `("/usr/local/bin"
+	        "/opt/homebrew/bin"
+	        ,(ii/home-dir-file "go/bin")))
   (mapc (lambda (path) (add-to-list 'exec-path path)) ii/exec-path)
 
   (defun ii/text-scale-reset ()
@@ -279,22 +279,23 @@
 
   ;; Windowing
   (setq switch-to-buffer-obey-display-actions t
-	    switch-to-buffer-in-dedicated-window 'pop)
+	      switch-to-buffer-in-dedicated-window 'pop)
 
   (setq display-buffer-alist
-	    `((,(rx (or "vterm"
-		            "VTerm"))
-	       (display-buffer-reuse-window))
+	      `((,(rx (or "vterm"
+		                "VTerm"))
+	         (display-buffer-reuse-window))
 
-	      (,(rx (or "*detached shell command*"
-		            "*detached-session-output"
-		            "cmd: " ;; for specially named detached shell commands
-		            "*detached-list*"
-		            "*Flycheck errors*"))
-	       (display-buffer-in-side-window)
-	       (side . bottom)
-	       (slot . 0)
-	       (window-height . 15))
+	        (,(rx (or "*detached shell command*"
+		                "*detached-session-output"
+		                "cmd: " ;; for specially named detached shell commands
+		                "*detached-list*"
+		                "*Flycheck errors*"))
+	         (display-buffer-in-side-window)
+	         (side . bottom)
+	         (slot . 0)
+           (window-width . 80)
+	         (window-height . 15))
 
           ;; diags; restclient resp
           (,(rx (or "*HTTP Response*"
@@ -302,6 +303,7 @@
            (display-buffer-in-side-window)
            (side . bottom)
            (slot . 1)
+           (window-width . 80)
            (window-height . 15))
 
           (,(rx (or "*Bookmark List*"
@@ -315,14 +317,14 @@
 	        (,(rx (or "*help*"
                     "*messages*"
 		                "*info*"))
-	       (display-buffer-reuse-window
-	        display-buffer-in-side-window)
-	       (side . right)
-	       (slot . 0)
-	       (window-width . 80))
+	         (display-buffer-reuse-window
+	          display-buffer-in-side-window)
+	         (side . right)
+	         (slot . 0)
+	         (window-width . 80))
 
-            (,(rx (or "*devdocs*"
-                      "*Apropos*"
+          (,(rx (or "*devdocs*"
+                    "*Apropos*"
                     "*timeclock report*"
                     (seq "*Customize" anychar)))
            (display-buffer-reuse-window
@@ -331,28 +333,28 @@
            (slot . 1)
            (window-width . 80))
 
-	      (,(rx (or
-		         "*xref*"
-		         "Magit"
-		         "converge.org"
-		         "COMMIT_EDITMSG"))
-	       (display-buffer-in-side-window)
-	       (side . left)
-	       (slot . 0)
-	       (window-width . 80)
-	       (window-parameters
-	        (no-delete-other-windows . t)))
+	        (,(rx (or
+		             "*xref*"
+		             "Magit"
+		             "converge.org"
+		             "COMMIT_EDITMSG"))
+	         (display-buffer-in-side-window)
+	         (side . left)
+	         (slot . 0)
+	         (window-width . 80)
+	         (window-parameters
+	          (no-delete-other-windows . t)))
 
-        (,(rx (or "*deadgrep"
-                  "*Occur*"
+          (,(rx (or "*deadgrep"
+                    "*Occur*"
                     "*Forge Repositories*"
                     "*forge: "))
            (display-buffer-in-side-window)
-	       (side . left)
-	       (slot . 1)
-	       (window-width . 80)
-	       (window-parameters
-	        (no-delete-other-windows . t)))
+	         (side . left)
+	         (slot . 1)
+	         (window-width . 80)
+	         (window-parameters
+	          (no-delete-other-windows . t)))
 
           (,(rx (or (seq (+ numeric) ";new-comment")))
            (display-buffer-in-side-window)
@@ -367,7 +369,7 @@
     (interactive)
     (dolist (win (window-list))
       (if (equal "*Help*" (buffer-name (window-buffer win)))
-	      (delete-window win))))
+	        (delete-window win))))
   (global-set-key [ersatz-c-z] 'ii/close-help-window)
 
   ;; Some backup magic.  I hate losing things.
@@ -392,18 +394,18 @@ save it in `ffap-file-at-point-line-number' variable."
            (name
             (or (condition-case nil
                     (and (not (string-match "//" string)) ; foo.com://bar
-			             (substitute-in-file-name string))
+			                   (substitute-in-file-name string))
                   (error nil))
-		        string))
+		            string))
            (line-number-string
             (and (string-match ":[0-9]+" name)
-		         (substring name (1+ (match-beginning 0)) (match-end 0))))
+		             (substring name (1+ (match-beginning 0)) (match-end 0))))
            (line-number
             (and line-number-string
-		         (string-to-number line-number-string))))
+		             (string-to-number line-number-string))))
       (if (and line-number (> line-number 0))
           (setq ffap-file-at-point-line-number line-number)
-	    (setq ffap-file-at-point-line-number nil))))
+	      (setq ffap-file-at-point-line-number nil))))
 
   (defadvice find-file-at-point (after ffap-goto-line-number activate)
     "If `ffap-file-at-point-line-number' is non-nil goto this line."
@@ -570,18 +572,18 @@ save it in `ffap-file-at-point-line-number' variable."
                       :foreground (nord-color "aurora-0")
                       :height 2.2)
   :bind (("M-o" . ace-window)
-	     ([ersatz-c-return] . ace-window)))
+	       ([ersatz-c-return] . ace-window)))
 
 (use-package zoom-window
   :straight t
   :bind (("M-z" . zoom-window-zoom)
-	     ([ersatz-m-z] . zoom-window-zoom))
+	       ([ersatz-m-z] . zoom-window-zoom))
   :config
   (defun ii/enlarge-on-zoom (&rest r)
     "When zooming a window, enlarge the text; reverse the
  modification when the window is un-zoomed."
     (if (zoom-window--enable-p)
-	    (text-scale-set 2)
+	      (text-scale-set 2)
       (text-scale-set 0)))
   (advice-add #'zoom-window-zoom :after #'ii/enlarge-on-zoom))
 
@@ -662,8 +664,8 @@ save it in `ffap-file-at-point-line-number' variable."
   :bind ("s-p" . ii/crdt/body)
   :config
   (defhydra ii/crdt (:color pink
-			                :hint nil
-			                :exit t)
+			                      :hint nil
+			                      :exit t)
     "
 CRDT Actions
 
@@ -868,13 +870,21 @@ _v_: visualize mode       _D_: disconnect
   :straight t
   :demand t
   :bind (("s-g" . 'magit-status))
-  :hook (before-save . magit-wip-commit-initial-backup)
+  :hook ((before-save . magit-wip-commit-initial-backup)
+         (git-commit-setup . git-commit-turn-on-flyspell))
   :config
   (set-face-attribute 'magit-section-highlight nil
                       :background (nord-color "polar-night-1"))
 
   (setq magit-commit-show-diff nil)
   (magit-wip-mode 1))
+
+(use-package structured-commit
+  :after magit
+  :straight '(structured-commit :type git
+                                :host github
+                                :repo "bunnylushington/structured-commit")
+  :hook (git-commit-setup . structured-commit/write-message))
 
 (use-package ghub
   :straight t)
@@ -1881,7 +1891,7 @@ that we can generate a skeleton with the cobracmd yasnippet."
 (use-package tabulated-list
   :init
   (add-hook 'tabulated-list-mode-hook
-          (lambda () (setq tabulated-list-use-header-line nil))))
+            (lambda () (setq tabulated-list-use-header-line nil))))
 
 (use-package xkcd
   :straight t)
