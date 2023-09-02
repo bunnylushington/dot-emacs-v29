@@ -1751,13 +1751,18 @@ _v_: visualize mode       _D_: disconnect
 
 
 (defun ii/what-face (pos)
-  "Show face at point"
+  "Show face at point.
+
+Face (or faces if multiple) will be added to the kill-ring."
   (interactive "d")
   (let ((face (or (get-char-property (point) 'read-face-name)
                   (get-char-property (point) 'face))))
-    (if face (progn
-               (kill-new (symbol-name face))
-               (message "Face: %s" face))
+    (if face
+        (progn
+          (when (listp face)
+            (dolist (f face)
+              (kill-new (symbol-name f))))
+          (message "Face: %s" face))
       (message "No face at %d" pos))))
 
 (defun ii/func-region (start end func)
