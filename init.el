@@ -1240,10 +1240,32 @@ _v_: visualize mode       _D_: disconnect
 
 (use-package markdown-mode
   :straight t
+  :bind (("s-." . markdown-toggle-markup-hiding))
   :config
-  (setq markdown-fontify-code-blocks-natively t)
-  :mode (("\\.text\\'" . markdown-mode)
-         ("\\.markdown\\'" . markdown-mode)
+  (setq markdown-fontify-code-blocks-natively t
+        markdown-indent-on-enter 'indent-and-new-item)
+
+  (defun ii/gfm-mode-hook ()
+    (setq markdown-header-scaling t)
+    (setq markdown-hide-urls t)
+    (visual-line-mode 1))
+  (add-hook 'gfm-mode-hook 'ii/gfm-mode-hook)
+
+  ;; some face tweaking
+  (set-face-attribute 'markdown-language-keyword-face nil
+                      :background (nord-color "polar-night-1")
+                      :height 0.8
+                      :foreground (nord-color "frost-3"))
+  (set-face-attribute 'markdown-bold-face nil
+                      :weight 'bold)
+  (set-face-attribute 'markdown-markup-face nil
+                      :foreground (nord-color "polar-night-3"))
+  (set-face-attribute 'markdown-code-face nil
+                      :extend t
+                      :background (nord-color "polar-night-1"))
+
+  :mode (("\\.text\\'" . gfm-mode)
+         ("\\.markdown\\'" . gfm-mode)
          ("\\.md\\'" . gfm-mode)))
 
 ;; Restclient
