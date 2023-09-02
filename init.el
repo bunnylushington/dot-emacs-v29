@@ -1240,6 +1240,8 @@ _v_: visualize mode       _D_: disconnect
 
 (use-package markdown-mode
   :straight t
+  :config
+  (setq markdown-fontify-code-blocks-natively t)
   :mode (("\\.text\\'" . markdown-mode)
          ("\\.markdown\\'" . markdown-mode)
          ("\\.md\\'" . gfm-mode)))
