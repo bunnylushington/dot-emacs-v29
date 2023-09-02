@@ -1238,8 +1238,13 @@ _v_: visualize mode       _D_: disconnect
   :config
   (unless (server-running-p) (server-start)))
 
+
+(use-package edit-indirect
+  :straight t)
+
 (use-package markdown-mode
   :straight t
+  :after edit-indirect
   :bind (("s-." . markdown-toggle-markup-hiding))
   :config
   (setq markdown-fontify-code-blocks-natively t
@@ -1330,7 +1335,6 @@ _v_: visualize mode       _D_: disconnect
         global-linum-mode nil)
   (setq-default left-fringe-width 15)
   (window-divider-mode 0))
-
 
 (use-package eshell
   :bind ("s-n" . eshell)
