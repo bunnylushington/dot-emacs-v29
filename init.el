@@ -1296,7 +1296,7 @@ _v_: visualize mode       _D_: disconnect
           (directory "~/junk"))
       (rgrep pattern "*" directory)))
 
-  (global-set-key (kbd "C-x j") 'open-junk-file)
+  (global-set-key (kbd "s-j") 'open-junk-file)
   (global-set-key (kbd "C-x C-j") 'ii/open-current-junk-directory)
   (global-set-key (kbd "C-x M-j") 'ii/rgrep-junk-directory))
 
@@ -1735,7 +1735,6 @@ _v_: visualize mode       _D_: disconnect
               (link text url)))))))
 
   (define-key lui-mode-map (kbd "M-k") 'ii/lui-add-link)
-
 
   (defun ii/nano-modeline-slack-buffer-mode ()
     "Nano line for slack buffer modes"
