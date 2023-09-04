@@ -345,6 +345,9 @@
 	         (window-parameters
 	          (no-delete-other-windows . t)))
 
+          (,(rx (or "*ekg tags"))
+           (display-buffer-reuse-window))
+
           (,(rx (or "*deadgrep"
                     "*Occur*"
                     "*Forge Repositories*"
@@ -1245,33 +1248,63 @@ _v_: visualize mode       _D_: disconnect
 (use-package markdown-mode
   :straight t
   :after edit-indirect
-  :bind (("s-." . markdown-toggle-markup-hiding))
+  :bind (:map markdown-mode-map
+              ("s-." . markdown-toggle-markup-hiding))
+  :custom ((markdown-fontify-code-blocks-natively t)
+           (markdown-indent-on-enter 'indent-and-new-item)
+           (markdown-header-scaling t))
   :config
-  (setq markdown-fontify-code-blocks-natively t
-        markdown-indent-on-enter 'indent-and-new-item)
-
   (defun ii/gfm-mode-hook ()
-    (setq markdown-header-scaling t)
     (setq markdown-hide-urls t)
+    (markdown-toggle-markup-hiding)
     (visual-line-mode 1))
   (add-hook 'gfm-mode-hook 'ii/gfm-mode-hook)
 
   ;; some face tweaking
   (set-face-attribute 'markdown-language-keyword-face nil
-                      :background (nord-color "polar-night-1")
+                      :background (nord-color "polar-night-0")
                       :height 0.8
                       :foreground (nord-color "frost-3"))
-  (set-face-attribute 'markdown-bold-face nil
-                      :weight 'bold)
   (set-face-attribute 'markdown-markup-face nil
-                      :foreground (nord-color "polar-night-3"))
+                      :background (nord-color "polar-night-0")
+                      :foreground (nord-color "snow-storm-0"))
   (set-face-attribute 'markdown-code-face nil
                       :extend t
-                      :background (nord-color "polar-night-1"))
+                      :background (nord-color "polar-night-0"))
 
   :mode (("\\.text\\'" . gfm-mode)
          ("\\.markdown\\'" . gfm-mode)
          ("\\.md\\'" . gfm-mode)))
+
+(use-package hl-line
+  :config
+  (set-face-attribute 'hl-line nil
+                      :background (nord-color "polar-night-0")))
+
+(use-package ekg
+  :straight t
+  :config
+
+  (set-face-attribute 'ekg-title nil
+                      :foreground (nord-color "aurora-4")
+                      :underline nil)
+  (set-face-attribute 'ekg-metadata nil
+                      :background (nord-color "polar-night-0")
+                      :foreground (nord-color "aurora-3")
+                      :inherit 'ekg-tag)
+  (set-face-attribute 'ekg-notes-mode-title nil
+                      :box nil
+                      :underline nil
+                      :foreground (nord-color "aurora-2")
+                      :height 1.3)
+  (set-face-attribute 'ekg-tag nil
+                      :box nil
+                      :background (nord-color "polar-night-0")
+                      :foreground (nord-color "aurora-3")
+                      :height 1.0)
+
+  (setq ekg-capture-default-mode 'gfm-mode)
+  (add-to-list 'ekg-acceptable-modes 'gfm-mode))
 
 ;; Restclient
 (use-package restclient
@@ -1686,7 +1719,7 @@ _v_: visualize mode       _D_: disconnect
   _u_: unread rooms        _c_: compose in buffer
   _i_: select IM           _t_: show/create thread
   _r_: select room         _y_: region to code block
-  _p_: edit message
+  _p_: edit message        _k_: message to EKG
   "
     ("a" slack-all-threads)
     ("u" slack-select-unread-rooms)
@@ -1697,6 +1730,7 @@ _v_: visualize mode       _D_: disconnect
     ("t" slack-thread-show-or-create)
     ("y" ii/slack-copy-to-buffer)
     ("p" slack-message-edit)
+    ("k" ii/save-slack-message-to-ekg)
     ("q" nil "quit" :color blue))
 
 
@@ -1731,6 +1765,27 @@ _v_: visualize mode       _D_: disconnect
         (goto-char (1- label-beg))
         (delete-char 1)
         (delete-region (1- label-end) url-end))))
+
+  ;; EKG interaction
+  (defun ii/save-slack-message-to-ekg ()
+    (interactive)
+    (slack-if-let* ((buf slack-current-buffer))
+        (ii/slack-message-to-ekg buf (slack-get-ts))))
+
+  (cl-defmethod ii/slack-message-to-ekg ((this slack-room-buffer) ts)
+    (let* ((team (slack-buffer-team this))
+           (room (slack-buffer-room this))
+           (message (slack-room-find-message room ts))
+           (text (slack-message-body message team))
+           (slack-tag (concat "slack/" (slack-room-name room team)))
+           (msg-time (format-time-string "%F" (slack-message-time-stamp message)))
+           (slack-ts (concat "slack-ts/" msg-time)))
+      (set-text-properties 0 (length text) nil text)
+      (when (fboundp 'ekg-save-note)
+        (ekg-save-note (ekg-note-create text
+                                        'gfm-mode
+                                        `(,(ekg-tag-for-date)
+                                          "slack" ,slack-tag ,slack-ts))))))
 
   ;; attach add-link to the mrkdwn parser
   (advice-add 'slack-mrkdwn-add-face :after #'ii/slack-mrkdwn-add-link)
@@ -1784,9 +1839,10 @@ Face (or faces if multiple) will be added to the kill-ring."
                   (get-char-property (point) 'face))))
     (if face
         (progn
-          (when (listp face)
-            (dolist (f face)
-              (kill-new (symbol-name f))))
+          (if (listp face)
+              (dolist (f face)
+                (kill-new (symbol-name f)))
+            (kill-new (symbol-name face)))
           (message "Face: %s" face))
       (message "No face at %d" pos))))
 
@@ -1942,6 +1998,7 @@ that we can generate a skeleton with the cobracmd yasnippet."
 ;; the :init section here is intentionally not refactored
 (use-package bookmark+
   :straight t
+  :after org
   :demand t
   :config
   (defun ii/bmkp-autoname-bookmark-function (position)
