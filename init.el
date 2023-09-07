@@ -192,6 +192,7 @@
    default-directory "~/"
    widget-image-enable nil
    tab-width 2
+   window-combination-resize t
 
    ;; fill column
    display-fill-column-indicator-character 124
@@ -209,6 +210,7 @@
 
   (midnight-mode)
   (subword-mode)
+  (repeat-mode 1)
   (undelete-frame-mode)
   (pixel-scroll-precision-mode)
   (global-goto-address-mode)
@@ -332,6 +334,19 @@
            (side . right)
            (slot . 1)
            (window-width . 80))
+
+          (,(rx (or "*Fancy Diary Entries*"))
+           (display-buffer-reuse-window
+            display-buffer-in-side-window)
+           (side . right)
+           (slot . -1)
+           (window-width . 80))
+
+          (,(rx (or "*Calendar*"))
+           (display-buffer-reuse-window
+            display-buffer-in-side-window)
+           (side . top)
+           (slot . 0))
 
 	        (,(rx (or
 		             "*xref*"
@@ -459,6 +474,11 @@ save it in `ffap-file-at-point-line-number' variable."
   (set-face-attribute 'apropos-symbol nil
                       :foreground (nord-color "aurora-2")
                       :height 1.2))
+
+(use-package eros
+  :straight t
+  :config
+  (eros-mode 1))
 
 (use-package replace
   :config
@@ -1537,7 +1557,6 @@ _v_: visualize mode       _D_: disconnect
   (variable-pitch-mode 1))
 
 (use-package org
-  :straight t
   :ensure t
   :hook ((org-mode . nano-modeline-org-mode)
          (org-mode . ii/configure-org-buffer))
@@ -1984,6 +2003,30 @@ that we can generate a skeleton with the cobracmd yasnippet."
 (use-package xkcd
   :straight t)
 
+(use-package diary-lib
+  :config
+  (setq ii/external-ical-files
+        '(("saints.diary" .
+           "https://sync.roktcalendar.com/webcal/3f37f856-e639-4500-8052-f70bc386dd23")
+          ("mardigras.diary" .
+           "https://www.mardigrasneworleans.com/parade-calendar/all.ics")))
+
+  (defun ii/load-external-ical-files ()
+    "Refresh diary files.  See var ii/external-ical-files for defs."
+    (interactive)
+    (save-excursion
+      (dolist (ical ii/external-ical-files)
+        (let ((ical-file (make-temp-file "ical"))
+              (ical-url (cdr ical))
+              (diary-file (expand-file-name (car ical) user-emacs-directory)))
+          (delete-file diary-file)
+          (shell-command (format "wget -O %s %s" ical-file ical-url))
+          (icalendar-import-file ical-file diary-file)
+          (delete-file ical-file)))))
+
+  (add-hook 'diary-list-entries-hook 'diary-include-other-diary-files))
+
+
 (use-package ediff
   :init
   (defun ii/maybe-close-tab ()
@@ -1998,7 +2041,6 @@ that we can generate a skeleton with the cobracmd yasnippet."
 ;; the :init section here is intentionally not refactored
 (use-package bookmark+
   :straight t
-  :after org
   :demand t
   :config
   (defun ii/bmkp-autoname-bookmark-function (position)
