@@ -18,7 +18,7 @@
 
 ;; MacOS specific configuration
 (if (eql system-type 'darwin)
-    (setq mac-option-modifier '(:function alt :mouse alt)
+    (setq mac-option-modifier 'super
           mac-right-command-modifier 'super
           mac-right-option-modifier 'hyper
           ns-alternate-modifier 'super
@@ -104,6 +104,41 @@
              (nano-modeline-window-dedicated))))
 (add-hook 'crdt-mode-hook #'ii/nano-modeline-crdt-mode)
 
+
+;;; begin slack experimental
+(defface ii/slack-headline-message-active
+  `((t
+     :height 1.5
+     :foreground ,(nord-color "aurora-0")
+     :extend t
+     :inherit 'default))
+  "Slack message active headline.")
+
+(defface ii/slack-headline-message-inactive
+  `((t
+     :inherit 'ii/slack-headline-message-active
+     :foreground ,(nord-color "aurora-4")))
+  "Slack message inactive headline.")
+
+(defun ii/slack-message-headline ()
+  (interactive)
+  (let* ((window (get-buffer-window (current-buffer)))
+         (active (eq window nano-modeline--selected-window))
+         (face (if active
+                   'ii/slack-headline-message-active
+                 'ii/slack-headline-message-inactive))
+         (title (format "%s"
+                        (propertize
+                         " Something Else Here"
+                         'display '(raise -0.2)
+                         'face face))))
+    (prin1 (list active window nano-modeline--selected-window))
+    (setq-local header-line-format title)
+    (add-hook 'post-command-hook #'nano-modeline--update-selected-window)))
+(remove-hook 'yaml-mode-hook #'ii/slack-message-headline)
+;;; end slack experimental
+
+
 (defun ii/nano-modeline-window-zoom (dedicated-symbol)
   "Advice after `nano-modeline-window-dedicated'."
   (if (and (fboundp 'zoom-window--enable-p)
@@ -172,11 +207,13 @@
 
 (use-package emacs
   :bind (("C-M-SPC" . cycle-spacing)
-	       ("<f5>" . scratch-buffer)
-	       ("C-+" . text-scale-increase)
-	       ("C--" . text-scale-decrease)
-	       ("C-=" . ii/text-scale-reset)
-	       ("C-c w" . display-fill-column-indicator-mode))
+	     ("<f5>" . scratch-buffer)
+	     ("C-+" . text-scale-increase)
+	     ("C--" . text-scale-decrease)
+	     ("C-=" . ii/text-scale-reset)
+         ("C-S-d" . down-list)
+         ("C-S-u" . backward-up-list)
+	     ("C-c w" . display-fill-column-indicator-mode))
 
   :hook ((after-save . executable-make-buffer-file-executable-if-script-p))
 
@@ -209,7 +246,7 @@
    calendar-longitude -90.0715)
 
   (midnight-mode)
-  (subword-mode)
+  (global-subword-mode 1)
   (repeat-mode 1)
   (undelete-frame-mode)
   (pixel-scroll-precision-mode)
@@ -244,9 +281,9 @@
   (setq custom-file (ii/emacs-dir-file "custom-file.el"))
 
   (setq ii/exec-path
-	      `("/usr/local/bin"
-	        "/opt/homebrew/bin"
-	        ,(ii/home-dir-file "go/bin")))
+	    `("/usr/local/bin"
+	      "/opt/homebrew/bin"
+	      ,(ii/home-dir-file "go/bin")))
   (mapc (lambda (path) (add-to-list 'exec-path path)) ii/exec-path)
 
   (defun ii/text-scale-reset ()
@@ -281,23 +318,23 @@
 
   ;; Windowing
   (setq switch-to-buffer-obey-display-actions t
-	      switch-to-buffer-in-dedicated-window 'pop)
+	    switch-to-buffer-in-dedicated-window 'pop)
 
   (setq display-buffer-alist
-	      `((,(rx (or "vterm"
-		                "VTerm"))
-	         (display-buffer-reuse-window))
+	    `((,(rx (or "vterm"
+		            "VTerm"))
+	       (display-buffer-reuse-window))
 
-	        (,(rx (or "*detached shell command*"
-		                "*detached-session-output"
-		                "cmd: " ;; for specially named detached shell commands
-		                "*detached-list*"
-		                "*Flycheck errors*"))
-	         (display-buffer-in-side-window)
-	         (side . bottom)
-	         (slot . 0)
+	      (,(rx (or "*detached shell command*"
+		            "*detached-session-output"
+		            "cmd: " ;; for specially named detached shell commands
+		            "*detached-list*"
+		            "*Flycheck errors*"))
+	       (display-buffer-in-side-window)
+	       (side . bottom)
+	       (slot . 0)
            (window-width . 80)
-	         (window-height . 15))
+	       (window-height . 15))
 
           ;; diags; restclient resp
           (,(rx (or "*HTTP Response*"
@@ -316,14 +353,14 @@
            (window-width . 100)
            (window-height . 15))
 
-	        (,(rx (or "*help*"
+	      (,(rx (or "*help*"
                     "*messages*"
-		                "*info*"))
-	         (display-buffer-reuse-window
-	          display-buffer-in-side-window)
-	         (side . right)
-	         (slot . 0)
-	         (window-width . 80))
+		            "*info*"))
+	       (display-buffer-reuse-window
+	        display-buffer-in-side-window)
+	       (side . right)
+	       (slot . 0)
+	       (window-width . 80))
 
           (,(rx (or "*devdocs*"
                     "*Apropos*"
@@ -348,19 +385,22 @@
            (side . top)
            (slot . 0))
 
-	        (,(rx (or
-		             "*xref*"
-		             "Magit"
-		             "converge.org"
-		             "COMMIT_EDITMSG"))
-	         (display-buffer-in-side-window)
-	         (side . left)
-	         (slot . 0)
-	         (window-width . 80)
-	         (window-parameters
-	          (no-delete-other-windows . t)))
+	      (,(rx (or
+		         "*xref*"
+		         "Magit"
+		         "converge.org"
+		         "COMMIT_EDITMSG"))
+	       (display-buffer-in-side-window)
+	       (side . left)
+	       (slot . 0)
+	       (window-width . 80)
+	       (window-parameters
+	        (no-delete-other-windows . t)))
 
-          (,(rx (or "*ekg tags"))
+          (,(rx (or "*ekg tags"
+                    "*EKG Note List"
+                    "*EKG Tag List*"
+                    "*EKG Capture"))
            (display-buffer-reuse-window))
 
           (,(rx (or "*deadgrep"
@@ -368,11 +408,11 @@
                     "*Forge Repositories*"
                     "*forge: "))
            (display-buffer-in-side-window)
-	         (side . left)
-	         (slot . 1)
-	         (window-width . 80)
-	         (window-parameters
-	          (no-delete-other-windows . t)))
+	       (side . left)
+	       (slot . 1)
+	       (window-width . 80)
+	       (window-parameters
+	        (no-delete-other-windows . t)))
 
           (,(rx (or (seq (+ numeric) ";new-comment")))
            (display-buffer-in-side-window)
@@ -387,7 +427,7 @@
     (interactive)
     (dolist (win (window-list))
       (if (equal "*Help*" (buffer-name (window-buffer win)))
-	        (delete-window win))))
+	      (delete-window win))))
   (global-set-key [ersatz-c-z] 'ii/close-help-window)
 
   ;; Some backup magic.  I hate losing things.
@@ -412,18 +452,18 @@ save it in `ffap-file-at-point-line-number' variable."
            (name
             (or (condition-case nil
                     (and (not (string-match "//" string)) ; foo.com://bar
-			                   (substitute-in-file-name string))
+			             (substitute-in-file-name string))
                   (error nil))
-		            string))
+		        string))
            (line-number-string
             (and (string-match ":[0-9]+" name)
-		             (substring name (1+ (match-beginning 0)) (match-end 0))))
+		         (substring name (1+ (match-beginning 0)) (match-end 0))))
            (line-number
             (and line-number-string
-		             (string-to-number line-number-string))))
+		         (string-to-number line-number-string))))
       (if (and line-number (> line-number 0))
           (setq ffap-file-at-point-line-number line-number)
-	      (setq ffap-file-at-point-line-number nil))))
+	    (setq ffap-file-at-point-line-number nil))))
 
   (defadvice find-file-at-point (after ffap-goto-line-number activate)
     "If `ffap-file-at-point-line-number' is non-nil goto this line."
@@ -595,18 +635,18 @@ save it in `ffap-file-at-point-line-number' variable."
                       :foreground (nord-color "aurora-0")
                       :height 2.2)
   :bind (("M-o" . ace-window)
-	       ([ersatz-c-return] . ace-window)))
+	     ([ersatz-c-return] . ace-window)))
 
 (use-package zoom-window
   :straight t
   :bind (("M-z" . zoom-window-zoom)
-	       ([ersatz-m-z] . zoom-window-zoom))
+	     ([ersatz-m-z] . zoom-window-zoom))
   :config
   (defun ii/enlarge-on-zoom (&rest r)
     "When zooming a window, enlarge the text; reverse the
  modification when the window is un-zoomed."
     (if (zoom-window--enable-p)
-	      (text-scale-set 2)
+	    (text-scale-set 2)
       (text-scale-set 0)))
   (advice-add #'zoom-window-zoom :after #'ii/enlarge-on-zoom))
 
@@ -616,6 +656,7 @@ save it in `ffap-file-at-point-line-number' variable."
                       :foreground (nord-color "aurora-2"))
   (setq dired-use-ls-dired nil
         dired-listing-switches "-lhA"
+        dired-kill-when-opening-new-dired-buffer t
         dired-vc-rename-file t))
 
 (use-package all-the-icons
@@ -687,8 +728,8 @@ save it in `ffap-file-at-point-line-number' variable."
   :bind ("s-p" . ii/crdt/body)
   :config
   (defhydra ii/crdt (:color pink
-			                      :hint nil
-			                      :exit t)
+			                :hint nil
+			                :exit t)
     "
 CRDT Actions
 
@@ -963,6 +1004,11 @@ _v_: visualize mode       _D_: disconnect
   (qbs-init)
   (qbs-add-predicates
    (make-qbs:predicate
+    :name 'slack
+    :shortcut "C-s"
+    :test '(when (member major-mode '(slack-message-buffer-mode))
+             qbs:buffer-name))
+   (make-qbs:predicate
     :name 'vterm
     :shortcut "C-v"
     :test '(when (member major-mode '(vterm-mode eshell-mode))
@@ -1134,6 +1180,12 @@ _v_: visualize mode       _D_: disconnect
   :custom
   (lsp-completion-provider :none)
   (lsp-modeline-diagnostics-enable nil)
+
+  ;; This sure is hacky.  Why is lsp stuck at 0.14.0 (which fails with OTP 26)?
+  (lsp-elixir-ls-version "v0.16.0")
+  (lsp-elixir-ls-download-url
+   "https://github.com/elixir-lsp/elixir-ls/releases/download/v0.16.0/elixir-ls-v0.16.0.zip")
+
   :config
   ;; (lsp-register-custom-settings
   ;;  '(("gopls.completeUnimported" t t)
@@ -1246,6 +1298,32 @@ _v_: visualize mode       _D_: disconnect
 (use-package elixir-mode
   :straight t)
 
+;; Elixir test.  This is kind of hacked together, I'm not yet sure why
+;; the use-package configuration is so broken.
+(use-package elixir-test
+  :after elixir-mode
+  :straight '(elixir-test :type git
+                          :host github
+                          :repo "J3RN/elixir-test-mode")
+  :load-path "straight/repos/elixir-test-mode"
+  :bind (:map elixir-test-mode-map ("C-c e" . elixir-test-command-map))
+  :config
+  (require 'elixir-test)
+
+  ;; Stolen from https://tinyurl.com/ycxucjue
+  ;; via https://tinyurl.com/4f9am84x
+  (require 'ansi-color)
+  (defun endless/colorize-compilation ()
+    "Colorize from `compilation-filter-start' to `point'."
+    (let ((inhibit-read-only t))
+      (ansi-color-apply-on-region
+       compilation-filter-start (point))))
+
+  (add-hook 'compilation-filter-hook #'endless/colorize-compilation)
+  (add-hook 'elixir-mode-hook #'elixir-test-mode))
+
+
+
 ;; Tramp
 (use-package tramp
   :config
@@ -1323,8 +1401,17 @@ _v_: visualize mode       _D_: disconnect
                       :foreground (nord-color "aurora-3")
                       :height 1.0)
 
+  (global-set-key (kbd "<f9>") 'ekg-capture)
+  (global-set-key (kbd "<f10>") 'ekg-show-notes-with-any-tags)
+  (global-set-key (kbd "C-<f10>") 'ekg-show-notes-with-all-tags)
   (setq ekg-capture-default-mode 'gfm-mode)
   (add-to-list 'ekg-acceptable-modes 'gfm-mode))
+
+(use-package ekg-extras
+  :after ekg
+  :straight '(ekg-extras :type git
+                         :host codeberg
+                         :repo "bunnylushington/ekg-extras"))
 
 ;; Restclient
 (use-package restclient
@@ -1359,26 +1446,15 @@ _v_: visualize mode       _D_: disconnect
   (which-key-mode))
 
 (use-package open-junk-file
-  :straight t
+  :straight t)
+
+(use-package junk-file-extras
+  :after open-junk-file
+  :straight '(junk-file-extras :type git
+                               :host codeberg
+                               :repo "bunnylushington/junk-file-extras")
   :config
-
-  (defun ii/open-current-junk-directory ()
-    "Dired the most relevant junk directory."
-    (interactive)
-    (let* ((full-filename (format-time-string open-junk-file-format))
-           (directory (file-name-directory full-filename)))
-      (dired directory)))
-
-  (defun ii/rgrep-junk-directory ()
-    "Run rgrep over the entire junk directory."
-    (interactive)
-    (let ((pattern (read-string "Pattern: "))
-          (directory "~/junk"))
-      (rgrep pattern "*" directory)))
-
-  (global-set-key (kbd "s-j") 'open-junk-file)
-  (global-set-key (kbd "C-x C-j") 'ii/open-current-junk-directory)
-  (global-set-key (kbd "C-x M-j") 'ii/rgrep-junk-directory))
+  (keymap-global-set "C-c j" junk-file-extras/map))
 
 (use-package fringe
   :config
@@ -1605,6 +1681,7 @@ _v_: visualize mode       _D_: disconnect
   :after hydra
   :bind   ("s-s" . slack-mode-hydra/body)
   :config
+  (setq ii/enable-slack-logging nil)
   (load-file (ii/home-dir-file ".emacs-slack-config"))
   (slack-register-team
    :name ii/slack-team-name
@@ -1622,7 +1699,7 @@ _v_: visualize mode       _D_: disconnect
    :mark-as-read-immediately nil
    :full-and-display-names t
    :visible-threads t
-   :websocket-event-log-enabled nil
+   :websocket-event-log-enabled ii/enable-slack-logging
    :modeline-enable nil
    :subscribed-channels ii/slack-subscribed-channels)
   (slack-start)
@@ -1633,7 +1710,8 @@ _v_: visualize mode       _D_: disconnect
    lui-time-stamp-position 'right-margin
    lui-flyspell-p nil
    lui-fill-type nil
-   slack-log-level 'error
+   slack-log-level 'debug
+   slack-typing-visibility 'never
    slack-buffer-emojify 't
    slack-display-team-name nil
    slack-enable-wysiwyg 't
@@ -1646,34 +1724,35 @@ _v_: visualize mode       _D_: disconnect
 
   ;; this method always writes to the trace buffer which grows without
   ;; bound.  redefine the fn so it's more sane.
-  (with-eval-after-load 'slack-log
-    ;; Essentially no-op.  I think these data are pretty much captured
-    ;; by slack-log.
-    (defun slack-log-websocket-payload (payload team &optional out) t)
+  (when ii/enable-slack-logging
+    (with-eval-after-load 'slack-log
+      ;; Essentially no-op.  I think these data are pretty much captured
+      ;; by slack-log.
+      ;;(defun slack-log-websocket-payload (payload team &optional out) t)
 
-    ;; Use the user-level to determine if messages should be logged
-    (cl-defun slack-log (msg team &key
-                             (logger #'slack-message-logger)
-                             (level 'debug))
-      "LEVEL is one of 'trace, 'debug, 'info, 'warn, 'error"
-      (let ((log (format "%s [%s] %s - %s"
-                         (format-time-string slack-log-time-format)
-                         level
-                         msg
-                         (slack-team-name team)))
-            (buf (get-buffer-create (slack-log-buffer-name team))))
-        (when (functionp logger)
-          (funcall logger msg level team))
-        (let ((user-level (slack-log-level-to-int slack-log-level))
-              (current-level (slack-log-level-to-int level)))
-          (when (<= current-level user-level)
-            (with-current-buffer buf
-              (setq buffer-read-only nil)
-              (save-excursion
-                (goto-char (point-max))
-                (insert log)
-                (insert "\n"))
-              (setq buffer-read-only t)))))))
+      ;; Use the user-level to determine if messages should be logged
+      (cl-defun slack-log (msg team &key
+                               (logger #'slack-message-logger)
+                               (level 'debug))
+        "LEVEL is one of 'trace, 'debug, 'info, 'warn, 'error"
+        (let ((log (format "%s [%s] %s - %s"
+                           (format-time-string slack-log-time-format)
+                           level
+                           msg
+                           (slack-team-name team)))
+              (buf (get-buffer-create (slack-log-buffer-name team))))
+          (when (functionp logger)
+            (funcall logger msg level team))
+          (let ((user-level (slack-log-level-to-int slack-log-level))
+                (current-level (slack-log-level-to-int level)))
+            (when (<= current-level user-level)
+              (with-current-buffer buf
+                (setq buffer-read-only nil)
+                (save-excursion
+                  (goto-char (point-max))
+                  (insert log)
+                  (insert "\n"))
+                (setq buffer-read-only t))))))))
 
   (defface ii/lui-message-separator-face
     '((t (:inherit default-face :height 30)))
@@ -1739,6 +1818,7 @@ _v_: visualize mode       _D_: disconnect
   _i_: select IM           _t_: show/create thread
   _r_: select room         _y_: region to code block
   _p_: edit message        _k_: message to EKG
+                         _m_: embed mention
   "
     ("a" slack-all-threads)
     ("u" slack-select-unread-rooms)
@@ -1750,6 +1830,7 @@ _v_: visualize mode       _D_: disconnect
     ("y" ii/slack-copy-to-buffer)
     ("p" slack-message-edit)
     ("k" ii/save-slack-message-to-ekg)
+    ("m" slack-message-embed-mention)
     ("q" nil "quit" :color blue))
 
 
@@ -1835,6 +1916,15 @@ _v_: visualize mode       _D_: disconnect
               (link text url)))))))
 
   (define-key lui-mode-map (kbd "M-k") 'ii/lui-add-link)
+
+  ;; from emacs-slack PR #576
+  (cl-defmethod slack-room-name ((room slack-channel) team)
+    (if (slack-mpim-p room)
+        (format "MPIM: %s"
+                (string-join (mapcar (lambda (userid)
+                                       (slack-user-name userid team))
+                                     (slack-room-members room)) ", "))
+      (oref room name)))
 
   (defun ii/nano-modeline-slack-buffer-mode ()
     "Nano line for slack buffer modes"
@@ -2120,3 +2210,34 @@ Completion is available."))
             ;; otherwise, just jump to the bookmark
             (bookmark-jump bookmark))
         (error "%s is not a bookmark" bookmark))))))
+
+
+
+;; avy navigation: this is kind of experimental (for me)
+(use-package avy
+  :straight t
+  :config
+  (set-face-attribute 'avy-lead-face nil
+                      :foreground (nord-color "snow-storm-1")
+                      :background (nord-color "aurora-0")
+                      :height 1.4)
+  (set-face-attribute 'avy-lead-face-0 nil
+                      :foreground (nord-color "snow-storm-1")
+                      :background (nord-color "aurora-1")
+                      :height 1.4)
+  (set-face-attribute 'avy-lead-face-1 nil
+                      :foreground (nord-color "snow-storm-1")
+                      :background (nord-color "aurora-3")
+                      :height 1.4)
+  (set-face-attribute 'avy-lead-face-2 nil
+                      :foreground (nord-color "snow-storm-1")
+                      :background (nord-color "aurora-4")
+                      :height 1.4)
+
+  (setq
+   avy-timeout-seconds 0.6
+   avy-background nil
+   avy-style 'words
+   avy-all-windows nil)
+  (global-set-key (kbd "C-;") 'avy-goto-char)
+  (global-set-key (kbd "C-'") 'avy-goto-char-timer))
