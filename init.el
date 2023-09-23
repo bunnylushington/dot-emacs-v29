@@ -1004,8 +1004,7 @@ _v_: visualize mode       _D_: disconnect
   (qbs-init)
   (qbs-add-predicates
    (make-qbs:predicate
-    :name 'slack
-    :shortcut "C-s"
+    :name 'slack    :shortcut "C-s"
     :test '(when (member major-mode '(slack-message-buffer-mode))
              qbs:buffer-name))
    (make-qbs:predicate
@@ -1296,20 +1295,19 @@ _v_: visualize mode       _D_: disconnect
 
 ;; Elixir
 (use-package elixir-mode
-  :straight t)
+  :straight t
+  :after elixir-test
+  :bind (:map elixir-test-mode-map ("C-c e" . elixir-test-command-map))
+  :hook (elixir-mode . elixir-test-mode))
 
 ;; Elixir test.  This is kind of hacked together, I'm not yet sure why
 ;; the use-package configuration is so broken.
 (use-package elixir-test
-  :after elixir-mode
   :straight '(elixir-test :type git
                           :host github
                           :repo "J3RN/elixir-test-mode")
   :load-path "straight/repos/elixir-test-mode"
-  :bind (:map elixir-test-mode-map ("C-c e" . elixir-test-command-map))
   :config
-  (require 'elixir-test)
-
   ;; Stolen from https://tinyurl.com/ycxucjue
   ;; via https://tinyurl.com/4f9am84x
   (require 'ansi-color)
@@ -1319,8 +1317,7 @@ _v_: visualize mode       _D_: disconnect
       (ansi-color-apply-on-region
        compilation-filter-start (point))))
 
-  (add-hook 'compilation-filter-hook #'endless/colorize-compilation)
-  (add-hook 'elixir-mode-hook #'elixir-test-mode))
+  (add-hook 'compilation-filter-hook #'endless/colorize-compilation))
 
 
 
@@ -1703,6 +1700,18 @@ _v_: visualize mode       _D_: disconnect
    :modeline-enable nil
    :subscribed-channels ii/slack-subscribed-channels)
   (slack-start)
+
+  ;; this is pretty wrong.  i can't quite figure out why this cookie
+  ;; doesn't seem to be storable in the request/curl-cookie-jar.
+  (url-cookie-store
+   "d"
+   (auth-source-pick-first-password
+    :host '("slack-emacs")
+    :user "cookie"
+    :type 'netrc
+    :max 1)
+   nil ".slack.com" "/" t)
+
   (define-key lui-mode-map (kbd "<return>") 'newline)
   (define-key lui-mode-map (kbd "M-<return>") 'lui-send-input)
   (setq
