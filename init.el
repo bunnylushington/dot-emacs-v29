@@ -880,7 +880,7 @@ _v_: visualize mode       _D_: disconnect
                       :background (nord-color "polar-night-0")
                       :foreground (nord-color "aurora-3"))
   (set-face-attribute 'corfu-current nil
-                      :background (nord-color "frost-3")
+                      :background (nord-color "polar-night-1")
                       :foreground (nord-color "snow-storm-1"))
   (set-face-attribute 'corfu-annotations nil
                       :foreground (nord-color "snow-storm-0"))
@@ -2250,3 +2250,21 @@ Completion is available."))
    avy-all-windows nil)
   (global-set-key (kbd "C-;") 'avy-goto-char)
   (global-set-key (kbd "C-'") 'avy-goto-char-timer))
+
+
+(use-package tidal
+  :straight t
+  :bind (("H-<return>" . tidal-run-line)
+         ("s-<return>" . tidal-run-multiple-lines))
+  :config
+  (setq tidal-interpreter "/Users/bunnylushington/.ghcup/bin/ghci")
+  (setq tidal-boot-script-path "~/.local/share/aarch64-osx-ghc-9.6.2/tidal-1.9.4/BootTidal.hs"))
+
+(use-package tidal-extras
+  :straight '(tidal-extras :type git
+                           :host codeberg
+                           :repo "bunnylushington/tidal-extras")
+
+  :after tidal
+  :hook (tidal-mode . (lambda () (add-hook 'completion-at-point-functions
+                                           #'tidal-extras/completion-at-point nil t))))
