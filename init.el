@@ -148,25 +148,26 @@
     dedicated-symbol))
 
 (defun ii/nano-lsp-warnings-errors (dedicated-symbol)
-  (if (and (boundp 'lsp--buffer-workspaces)
-           (not (null lsp--buffer-workspaces)))
-      (let ((errors 0)
-            (warnings 0)
-            (error-msg nil)
-            (warning-msg nil))
-        (maphash (lambda (file diagnostic)
-                   (dolist (diag diagnostic)
-                     (-let* (((&Diagnostic :message :severity? :source?
-                                           :range (&Range :start (&Position :line start-line))) diag))
-                       (cond
-                        ((= severity? 1) (setq errors (1+ errors)))
-                        ((= severity? 2) (setq warnings (1+ warnings)))))))
-                 (lsp-diagnostics))
-        (setq warning-msg (if (> warnings 0) (concat " ⚠ " (number-to-string warnings) " ") ""))
-        (setq error-msg (if (> errors 0) (concat " 💀 " (number-to-string errors) " ") ""))
-        (propertize (concat error-msg warning-msg dedicated-symbol)
-                    'face (nano-modeline-face 'secondary)))
-    dedicated-symbol))
+  dedicated-symbol)
+  ;; (if (and (boundp 'lsp--buffer-workspaces)
+  ;;          (not (null lsp--buffer-workspaces)))
+  ;;     (let ((errors 0)
+  ;;           (warnings 0)
+  ;;           (error-msg nil)
+  ;;           (warning-msg nil))
+  ;;       (maphash (lambda (file diagnostic)
+  ;;                  (dolist (diag diagnostic)
+  ;;                    (-let* (((&Diagnostic :message :severity? :source?
+  ;;                                          :range (&Range :start (&Position :line start-line))) diag))
+  ;;                      (cond
+  ;;                       ((= severity? 1) (setq errors (1+ errors)))
+  ;;                       ((= severity? 2) (setq warnings (1+ warnings)))))))
+  ;;                (lsp-diagnostics))
+  ;;       (setq warning-msg (if (> warnings 0) (concat " ⚠ " (number-to-string warnings) " ") ""))
+  ;;       (setq error-msg (if (> errors 0) (concat " 💀 " (number-to-string errors) " ") ""))
+  ;;       (propertize (concat error-msg warning-msg dedicated-symbol)
+  ;;                   'face (nano-modeline-face 'secondary)))
+  ;;   dedicated-symbol))
 
 (defun ii/nano-modeline-autobookmark (dedicated-symbol)
   (if (and (boundp 'bmkp-automatic-bookmark-mode)
@@ -545,10 +546,7 @@ save it in `ffap-file-at-point-line-number' variable."
 ;; ruin a perfectly good layout!
 (use-package tab-bar
   :after timeclock
-  :init
-  ;; (setq tab-bar-select-tab-modifiers
-  ;;       (if (eq system-type 'darwin) '(super) '(hyper)))
-
+  :bind ("<f6>" . other-tab-prefix)
   :custom ((tab-bar-tab-name-format-function
             #'ii/tab-bar-tab-name-format)
            (tab-bar-history-mode t)
@@ -996,7 +994,8 @@ _v_: visualize mode       _D_: disconnect
         vterm-max-scrollback 10000))
 
 (use-package multi-vterm
-  :straight t)
+  :straight t
+  :bind ("H-n" . multi-vterm))
 
 (use-package quick-buffer-switch
   :straight t
@@ -1173,7 +1172,6 @@ _v_: visualize mode       _D_: disconnect
   :hook ((go-mode . lsp)
          (go-ts-mode . lsp)
          (elixir-mode . lsp)
-         (python-mode . lsp)
          (lsp-completion-mode . ii/lsp-mode-super-capf)
          (lsp-completion-mode . ii/lsp-mode-setup-completion))
   :custom
@@ -1191,6 +1189,15 @@ _v_: visualize mode       _D_: disconnect
   ;;    ("gopls.staticcheck" t t)))
   (setq lsp-headerline-breadcrumb-enable nil)
   :commands lsp)
+
+(use-package lsp-pyright
+  :straight t
+  :hook ((python-mode . (lambda ()
+                          (require 'lsp-pyright)
+                          (lsp)))
+         (python-ts-mode . (lambda ()
+                             (require 'lsp-pyright)
+                             (lsp)))))
 
 (use-package lsp-ui
   :straight t
