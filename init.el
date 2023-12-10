@@ -1441,6 +1441,9 @@ _v_: visualize mode       _D_: disconnect
   (setq sql-product 'postgres
         sql-mysql-options '("--protocol=tcp")))
 
+(use-package sql-indent
+  :straight t)
+
 (use-package outline-magic
   :straight t)
 
