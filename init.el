@@ -1165,13 +1165,14 @@ _v_: visualize mode       _D_: disconnect
 
   (defun ii/lsp-mode-super-capf ()
     (setq-local completion-at-point-functions
-                `(,(cape-super-capf
+                `(,(cape-capf-super
                     #'lsp-completion-at-point
                     #'yasnippet-capf))))
 
   :hook ((go-mode . lsp)
          (go-ts-mode . lsp)
          (elixir-mode . lsp)
+         (elixir-ts-mode . lsp)
          (lsp-completion-mode . ii/lsp-mode-super-capf)
          (lsp-completion-mode . ii/lsp-mode-setup-completion))
   :custom
@@ -1179,9 +1180,9 @@ _v_: visualize mode       _D_: disconnect
   (lsp-modeline-diagnostics-enable nil)
 
   ;; This sure is hacky.  Why is lsp stuck at 0.14.0 (which fails with OTP 26)?
-  (lsp-elixir-ls-version "v0.16.0")
+  (lsp-elixir-ls-version "v0.18.1")
   (lsp-elixir-ls-download-url
-   "https://github.com/elixir-lsp/elixir-ls/releases/download/v0.16.0/elixir-ls-v0.16.0.zip")
+   "https://github.com/elixir-lsp/elixir-ls/releases/download/v0.18.1/elixir-ls-v0.18.1.zip")
 
   :config
   ;; (lsp-register-custom-settings
@@ -1301,11 +1302,11 @@ _v_: visualize mode       _D_: disconnect
     (set-variable 'erlang-indent-level spaces t)))
 
 ;; Elixir
-(use-package elixir-mode
+(use-package elixir-ts-mode
   :straight t
   :after elixir-test
   :bind (:map elixir-test-mode-map ("C-c e" . elixir-test-command-map))
-  :hook (elixir-mode . elixir-test-mode))
+  :hook (elixir-ts-mode . elixir-test-mode))
 
 ;; Elixir test.  This is kind of hacked together, I'm not yet sure why
 ;; the use-package configuration is so broken.
@@ -2164,6 +2165,16 @@ that we can generate a skeleton with the cobracmd yasnippet."
   (customize-set-variable 'bmkp-autoname-format "^👀 .*$")
   (customize-set-value 'bmkp-autoname-bookmark-function
                        #'ii/bmkp-autoname-bookmark-function)
+  ;; when this is not set to `nil' explicitly, auto-save bookmarks
+  ;; gets itself into an infinite loop attempting to autosave and
+  ;; write the custom value to custom-file.el.  this happens only when
+  ;; the buffer associated with the bookmark has not been saved. (to
+  ;; reproduce the issue, remove the customize-set-value sexp, find a
+  ;; new file, and wait 30 seconds; it'll start printing messages like
+  ;; mad.  C-g will eventually break the loop.)  i only use one
+  ;; bookmark file so this isn't a problem but it really does seem
+  ;; like a bmkp bug.
+  (customize-set-value 'bmkp-last-as-first-bookmark-file nil)
   (global-set-key (kbd "<f4>") #'bookmark-bmenu-list)
 
   ;; auto-set bookmarks.
