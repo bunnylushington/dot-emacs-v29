@@ -49,6 +49,7 @@
    :repo "rougier/nano-emacs"))
 
 (setq nano-font-family-monospaced "Monaco")
+;;(setq nano-font-family-monospaced "FiraCode Nerd Font Mono")
 (setq nano-font-family-proportional "Arial")
 (setq nano-font-size 12)
 
@@ -89,9 +90,16 @@
   (let* ((prj (ii/project-current-short-name))
          (mode (s-chop-suffix "-mode" (format "%s" major-mode)))
          (dir (nano-modeline-default-directory 32))
-         (name (if prj
-                   (format "%s: %s" mode prj)
-                 (format "%s: %s" mode dir))))
+         (name
+          (if (or (s-starts-with? "vterm:" (buffer-name))
+                  (s-starts-with? "eshell:" (buffer-name)))
+              ;; has the vterm/eshell prefix
+              (if prj
+                  (format "%s: %s" mode prj)
+                (format "%s: %s" mode dir))
+            ;; is vterm-mode but has different prefix
+            (buffer-name))))
+
     (with-current-buffer (rename-buffer name t))
     (propertize name 'face nano-modeline-base-face)))
 
@@ -337,6 +345,13 @@
            (window-width . 80)
 	       (window-height . 15))
 
+          ;; rcmp
+          (,(rx "rcmp:")
+           (display-buffer-in-side-window)
+           (side . left)
+           (slot . 2)
+           (window-width . 80))
+
           ;; diags; restclient resp
           (,(rx (or "*HTTP Response*"
                     "*lsp-diagnostics*"))
@@ -515,6 +530,14 @@ save it in `ffap-file-at-point-line-number' variable."
   (set-face-attribute 'apropos-symbol nil
                       :foreground (nord-color "aurora-2")
                       :height 1.2))
+
+(use-package unicode-fonts
+  :straight t
+  :config
+  (when (file-exists-p (ii/emacs-dir-file "unicode-mapping.el"))
+    (load (ii/emacs-dir-file "unicode-mapping.el")))
+  (unicode-fonts-setup))
+
 
 (use-package eros
   :straight t
@@ -1215,6 +1238,7 @@ _v_: visualize mode       _D_: disconnect
   (dap-tooltip-mode 1)
   (require 'dap-hydra)
   (require 'dap-dlv-go)
+  (require 'dap-elixir)
   (add-hook 'dap-stopped-hook
             (lambda (arg) (call-interactively #'dap-hydra))))
 
@@ -1306,7 +1330,26 @@ _v_: visualize mode       _D_: disconnect
   :straight t
   :after elixir-test
   :bind (:map elixir-test-mode-map ("C-c e" . elixir-test-command-map))
-  :hook (elixir-ts-mode . elixir-test-mode))
+  :hook ((elixir-ts-mode . elixir-test-mode)
+         (elixir-ts-mode . ii/elixir-prettify-spec))
+  :config
+  (defun ii/elixir-prettify-spec ()
+    (dolist (mapping
+             (list
+              '("|>" . "▷")
+              '("->" . "➝")
+              '("<-" . "⭠")
+              '(">=" . "≧")
+              '("<=" . "≦")
+              '("@spec" . "🄢")
+              '("@doc" . "🄓")
+              '("@moduledoc" . "🄜")
+              ;; '("end" . "〉")
+              ;; '("do" . "〈")
+              '("==" . "⩵")))
+      (push mapping prettify-symbols-alist))
+    (prettify-symbols-mode 1))
+  )
 
 ;; Elixir test.  This is kind of hacked together, I'm not yet sure why
 ;; the use-package configuration is so broken.
@@ -1326,6 +1369,90 @@ _v_: visualize mode       _D_: disconnect
        compilation-filter-start (point))))
 
   (add-hook 'compilation-filter-hook #'endless/colorize-compilation))
+
+
+;; rcmp: not part of any package but useful with elixir projects
+(defun rcmp ()
+  "Compile or recompile the current project.
+
+rcmp (\"REPL Compile\") is a small utility function
+to (re)compile an Elixir mix based project.
+
+There should be a .dir-locals.el file in the root directory of
+the project.  It will have two keys, rcmp/compile-cmd and
+rcmp/recompile-cmd.  These values may be set in other ways (like
+the init.el file) if that's more convenient.  For example:
+
+  ((nil . ((rcmp/compile-cmd . \"iex -S mix\")
+           (rcmp/recompile-cmd . \"recompile\"))))
+
+The compile command will be sent to the rcmp buffer when it's
+first opened; if the buffer exists it is assumed iex (in this
+case) is already running and sends the recompile command.
+
+Note that recompiling, as hinted, requires iex to be running and
+probably on a blank REPL line.
+
+Any setup (e.g., environment variables) must be part of the shell
+environment VTerm creates.  I'm not yet sure what kind of setup
+would make sense for switching between multiple environments.
+
+I spent some time trying to make this all work with just
+`compile' but found the configuration onerous.  It is possible
+though, and worth remembering is that M-x compile with a prefix
+argument will open an interactive comint buffer.  Getting paths
+and envvars correct was messy (plus I am tooled up for using
+VTerm)."
+  (interactive)
+  (let ((default-directory (project-root (project-current))))
+    (let* ((project-name (project-name (project-current)))
+           (buf-name (rcmp/buffer-name))
+           (exists (get-buffer buf-name))
+           (buf (get-buffer-create buf-name))
+           (compile rcmp/compile-cmd)
+           (recompile rcmp/recompile-cmd)
+           (cmd (if exists recompile compile)))
+      (pop-to-buffer buf nil t)
+      (when (not exists)
+        (vterm-mode)
+        ;; Although in compilation-shell-minor-mode, VTerm whacks
+        ;; pretty much all the keybindings; set these explicitly in
+        ;; the compilation buffer (and don't interfere with other
+        ;; VTerm buffers elsewhere).
+        (use-local-map (copy-keymap vterm-mode-map))
+        (local-set-key (kbd "M-p") #'compilation-previous-error)
+        (local-set-key (kbd "M-n") #'compilation-next-error)
+        (local-set-key (kbd "M-<return>") #'compile-goto-error)
+        (local-set-key (kbd "<f12>") #'rcmp)
+        (local-set-key (kbd "s-<f12>") #'previous-window-any-frame)
+        (local-set-key (kbd "M-<f12>") #'rcmp/quit-window)
+        ;; VTerm does not consult the dir-locals so set those
+        ;; explicitly here allowing for recompilation from the rcmp
+        ;; buffer.
+        (set (make-local-variable 'rcmp/compile-cmd) compile)
+        (set (make-local-variable 'rcmp/recompile-cmd) recompile)
+        (compilation-shell-minor-mode))
+      (vterm-send-string cmd)
+      (vterm-send-return))))
+
+(defun rcmp/quit-window ()
+  "Quit or hide the rcmp compilation window."
+  (interactive)
+  (let ((win (get-buffer-window (rcmp/buffer-name))))
+    (when win
+      (if (or (window-at-side-p win 'top)
+              (window-at-side-p win 'bottom)
+              (window-at-side-p win 'left)
+              (window-at-side-p win 'right))
+          (window-toggle-side-windows)
+        (quit-window nil win)))))
+
+(defun rcmp/buffer-name ()
+  "Return the rcmp compile buffer name."
+ (format "rcmp: %s" (rcmp/project-name)))
+
+(global-set-key (kbd "<f12>") #'rcmp)
+(global-set-key (kbd "M-<f12>") #'rcmp/quit-window)
 
 
 
