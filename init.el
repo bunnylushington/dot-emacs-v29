@@ -91,15 +91,12 @@
          (mode (s-chop-suffix "-mode" (format "%s" major-mode)))
          (dir (nano-modeline-default-directory 32))
          (name
-          (if (or (s-starts-with? "vterm:" (buffer-name))
-                  (s-starts-with? "eshell:" (buffer-name)))
-              ;; has the vterm/eshell prefix
+          (if (string= mode "vterm")
               (if prj
-                  (format "%s: %s" mode prj)
+                  (format "%s: %s %s" mode prj dir)
                 (format "%s: %s" mode dir))
             ;; is vterm-mode but has different prefix
             (buffer-name))))
-
     (with-current-buffer (rename-buffer name t))
     (propertize name 'face nano-modeline-base-face)))
 
@@ -1181,7 +1178,8 @@ _v_: visualize mode       _D_: disconnect
 (use-package lsp-mode
   :straight t
   :init
-  (setq lsp-keymap-prefix "s-l")
+  (setq lsp-keymap-prefix "s-l"
+        lsp-lens-place-position 'above-line)
   (defun ii/lsp-mode-setup-completion ()
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless)))
@@ -1203,9 +1201,9 @@ _v_: visualize mode       _D_: disconnect
   (lsp-modeline-diagnostics-enable nil)
 
   ;; This sure is hacky.  Why is lsp stuck at 0.14.0 (which fails with OTP 26)?
-  (lsp-elixir-ls-version "v0.18.1")
+  (lsp-elixir-ls-version "v0.19.0")
   (lsp-elixir-ls-download-url
-   "https://github.com/elixir-lsp/elixir-ls/releases/download/v0.18.1/elixir-ls-v0.18.1.zip")
+   "https://github.com/elixir-lsp/elixir-ls/releases/download/v0.19.0/elixir-ls-v0.19.0.zip")
 
   :config
   ;; (lsp-register-custom-settings
@@ -1449,7 +1447,7 @@ VTerm)."
 
 (defun rcmp/buffer-name ()
   "Return the rcmp compile buffer name."
- (format "rcmp: %s" (rcmp/project-name)))
+ (format "rcmp: %s" (project-name (project-current))))
 
 (global-set-key (kbd "<f12>") #'rcmp)
 (global-set-key (kbd "M-<f12>") #'rcmp/quit-window)
@@ -1720,6 +1718,8 @@ VTerm)."
 
 
   ) ;; end of use-package eshell
+
+
 
 
 (use-package eshell-vterm
@@ -2416,3 +2416,27 @@ Completion is available."))
   :after tidal
   :hook (tidal-mode . (lambda () (add-hook 'completion-at-point-functions
                                            #'tidal-extras/completion-at-point nil t))))
+
+(defun ii/reload-safari ()
+  "Reload the topmost Safari tab via Applescript"
+  (interactive)ahk
+  (do-applescript "
+tell application \"Safari\"
+  set docUrl to URL of document 1
+  set URL of document 1 to docUrl
+end tell"))
+
+(global-set-key (kbd "H--") 'ii/reload-safari)
+
+(defun ii/print-to-pdf ()
+  (interactive)
+  (ps-spool-buffer)
+  (switch-to-buffer "*PostScript*")
+  (let* ((tmpfile (make-temp-file "psprint" nil ".ps"))
+         (printcmd (concat "ps2pdf " tmpfile " - | lpr")))
+    (write-file tmpfile)
+    (kill-buffer)
+    (shell-command printcmd)
+    (delete-file tmpfile)))
+
+(global-set-key (kbd "H-p") 'ii/print-to-pdf)
