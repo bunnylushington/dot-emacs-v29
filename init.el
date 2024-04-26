@@ -677,6 +677,19 @@ save it in `ffap-file-at-point-line-number' variable."
         dired-kill-when-opening-new-dired-buffer t
         dired-vc-rename-file t))
 
+(use-package dired-subtree
+  :straight t
+  :after dired
+  :bind (:map dired-mode-map
+              ("<tab>" . dired-subtree-toggle)
+              ("<C-tab>" . dired-subtree-cycle)))
+
+(use-package dired-collapse
+  :straight t
+  :after dired
+  :config
+  (add-hook 'dired-mode-hook 'dired-collapse-mode))
+
 (use-package all-the-icons
   :straight t
   :config
