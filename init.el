@@ -988,6 +988,21 @@ _v_: visualize mode       _D_: disconnect
   :straight t
   :after magit)
 
+(use-package code-review
+  :after magit
+  :straight (code-review
+             :type git
+             :host github
+             :repo "phelrine/code-review"
+             :branch "fix/closql-update"))
+
+(use-package gh-notify
+  :after forge
+  :straight (gh-notify
+             :type git
+             :host github
+             :repo "anticomputer/gh-notify"))
+
 (use-package diff-hl
   :straight t
   :custom (diff-hl-command-prefix (kbd "s-v"))
@@ -1207,6 +1222,8 @@ _v_: visualize mode       _D_: disconnect
          (go-ts-mode . lsp)
          (elixir-mode . lsp)
          (elixir-ts-mode . lsp)
+         (typescript-mode . lsp)
+         (typescript-ts-mode . lsp)
          (lsp-completion-mode . ii/lsp-mode-super-capf)
          (lsp-completion-mode . ii/lsp-mode-setup-completion))
   :custom
@@ -1303,6 +1320,14 @@ _v_: visualize mode       _D_: disconnect
 ;;
 ;; go install github.com/x-motemen/gore/cmd/gore@latest
 (use-package gorepl-mode
+  :straight t)
+
+;; typescript
+;;
+;; note: this seemed to be necessary to use the angular ls
+;;
+;; $ npm install --force -g @angular/language-service@next typescript @angular/language-server
+(use-package typescript-mode
   :straight t)
 
 ;; Python
