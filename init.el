@@ -66,6 +66,7 @@
 
 (straight-use-package 'nano-modeline)
 (require 'nano-modeline)
+
 (nano-modeline-prog-mode t)
 
 (require 'nano-colors)
@@ -76,22 +77,29 @@
 (set-face-background 'nano-modeline-status
                      (nord-color "snow-storm-0"))
 
+
 (defun ii/nano-modeline-vterm-mode ()
   "Nano line for vterm mode"
   (funcall nano-modeline-position
-           '((nano-modeline-buffer-status ">_") " "
+           '((ii/nano-modeline-vterm-status)
              (ii/nano-modeline-rename-emulator-buffer))
            '((nano-modeline-default-directory 16) " "
              (nano-modeline-window-dedicated))))
 (add-hook 'vterm-mode-hook #'ii/nano-modeline-vterm-mode)
 (add-hook 'eshell-mode-hook #'ii/nano-modeline-vterm-mode)
 
+(defun ii/nano-modeline-vterm-status ()
+  "Status to cisplay in vterm buffers."
+  (nano-modeline-buffer-status
+   (if (not (bound-and-true-p vterm-copy-mode)) ">_" "CP")))
+
 (defun ii/nano-modeline-rename-emulator-buffer ()
   (let* ((prj (ii/project-current-short-name))
          (mode (s-chop-suffix "-mode" (format "%s" major-mode)))
          (dir (nano-modeline-default-directory 32))
          (name
-          (if (string= mode "vterm")
+          (if (and (string= mode "vterm")
+                   (not (s-starts-with? "#" (buffer-name))))
               (if prj
                   (format "%s: %s %s" mode prj dir)
                 (format "%s: %s" mode dir))
@@ -99,6 +107,26 @@
             (buffer-name))))
     (with-current-buffer (rename-buffer name t))
     (propertize name 'face nano-modeline-base-face)))
+
+(defun ii/vterm-buffer-p ()
+  "Is the current buffer a verm buffer"
+  (s-starts-with? "vterm-" (format "%s" major-mode)))
+
+(defun ii/toggle-dedicate-vterm-buffer ()
+  "Dedicate and lock the name of the vterm buffer"
+  (interactive)
+  (when (ii/vterm-buffer-p)
+
+    (let* ((old (buffer-name))
+           (default
+            (if (and (not (s-starts-with? "#" old))
+                     (not (window-dedicated-p)))
+                (format "# %s" old)
+              old))
+           (new (read-from-minibuffer "Buffer Name: "
+                                      default)))
+      (rename-buffer new t)
+      (toggle-window-dedicated))))
 
 (defun ii/nano-modeline-crdt-mode ()
   "Nano line for CRDT mode"
@@ -143,7 +171,6 @@
 (remove-hook 'yaml-mode-hook #'ii/slack-message-headline)
 ;;; end slack experimental
 
-
 (defun ii/nano-modeline-window-zoom (dedicated-symbol)
   "Advice after `nano-modeline-window-dedicated'."
   (if (and (fboundp 'zoom-window--enable-p)
@@ -154,25 +181,25 @@
 
 (defun ii/nano-lsp-warnings-errors (dedicated-symbol)
   dedicated-symbol)
-  ;; (if (and (boundp 'lsp--buffer-workspaces)
-  ;;          (not (null lsp--buffer-workspaces)))
-  ;;     (let ((errors 0)
-  ;;           (warnings 0)
-  ;;           (error-msg nil)
-  ;;           (warning-msg nil))
-  ;;       (maphash (lambda (file diagnostic)
-  ;;                  (dolist (diag diagnostic)
-  ;;                    (-let* (((&Diagnostic :message :severity? :source?
-  ;;                                          :range (&Range :start (&Position :line start-line))) diag))
-  ;;                      (cond
-  ;;                       ((= severity? 1) (setq errors (1+ errors)))
-  ;;                       ((= severity? 2) (setq warnings (1+ warnings)))))))
-  ;;                (lsp-diagnostics))
-  ;;       (setq warning-msg (if (> warnings 0) (concat " ⚠ " (number-to-string warnings) " ") ""))
-  ;;       (setq error-msg (if (> errors 0) (concat " 💀 " (number-to-string errors) " ") ""))
-  ;;       (propertize (concat error-msg warning-msg dedicated-symbol)
-  ;;                   'face (nano-modeline-face 'secondary)))
-  ;;   dedicated-symbol))
+;; (if (and (boundp 'lsp--buffer-workspaces)
+;;          (not (null lsp--buffer-workspaces)))
+;;     (let ((errors 0)
+;;           (warnings 0)
+;;           (error-msg nil)
+;;           (warning-msg nil))
+;;       (maphash (lambda (file diagnostic)
+;;                  (dolist (diag diagnostic)
+;;                    (-let* (((&Diagnostic :message :severity? :source?
+;;                                          :range (&Range :start (&Position :line start-line))) diag))
+;;                      (cond
+;;                       ((= severity? 1) (setq errors (1+ errors)))
+;;                       ((= severity? 2) (setq warnings (1+ warnings)))))))
+;;                (lsp-diagnostics))
+;;       (setq warning-msg (if (> warnings 0) (concat " ⚠ " (number-to-string warnings) " ") ""))
+;;       (setq error-msg (if (> errors 0) (concat " 💀 " (number-to-string errors) " ") ""))
+;;       (propertize (concat error-msg warning-msg dedicated-symbol)
+;;                   'face (nano-modeline-face 'secondary)))
+;;   dedicated-symbol))
 
 (defun ii/nano-modeline-autobookmark (dedicated-symbol)
   (if (and (boundp 'bmkp-automatic-bookmark-mode)
@@ -213,13 +240,12 @@
 
 (use-package emacs
   :bind (("C-M-SPC" . cycle-spacing)
-	     ("<f5>" . scratch-buffer)
-	     ("C-+" . text-scale-increase)
-	     ("C--" . text-scale-decrease)
-	     ("C-=" . ii/text-scale-reset)
-         ("C-S-d" . down-list)
-         ("C-S-u" . backward-up-list)
-	     ("C-c w" . display-fill-column-indicator-mode))
+	       ("<f5>" . scratch-buffer)
+	       ("C-+" . text-scale-increase)
+	       ("C--" . text-scale-decrease)
+	       ("C-=" . ii/text-scale-reset)
+         ("s-d" . ii/toggle-dedicate-vterm-buffer)
+	       ("C-c w" . display-fill-column-indicator-mode))
 
   :hook ((after-save . executable-make-buffer-file-executable-if-script-p))
 
@@ -287,9 +313,9 @@
   (setq custom-file (ii/emacs-dir-file "custom-file.el"))
 
   (setq ii/exec-path
-	    `("/usr/local/bin"
-	      "/opt/homebrew/bin"
-	      ,(ii/home-dir-file "go/bin")))
+	      `("/usr/local/bin"
+	        "/opt/homebrew/bin"
+	        ,(ii/home-dir-file "go/bin")))
   (mapc (lambda (path) (add-to-list 'exec-path path)) ii/exec-path)
 
   (defun ii/text-scale-reset ()
@@ -324,23 +350,23 @@
 
   ;; Windowing
   (setq switch-to-buffer-obey-display-actions t
-	    switch-to-buffer-in-dedicated-window 'pop)
+	      switch-to-buffer-in-dedicated-window 'pop)
 
   (setq display-buffer-alist
-	    `((,(rx (or "vterm"
-		            "VTerm"))
-	       (display-buffer-reuse-window))
+	      `((,(rx (or "vterm"
+		                "VTerm"))
+	         (display-buffer-reuse-window))
 
-	      (,(rx (or "*detached shell command*"
-		            "*detached-session-output"
-		            "cmd: " ;; for specially named detached shell commands
-		            "*detached-list*"
-		            "*Flycheck errors*"))
-	       (display-buffer-in-side-window)
-	       (side . bottom)
-	       (slot . 0)
+	        (,(rx (or "*detached shell command*"
+		                "*detached-session-output"
+		                "cmd: " ;; for specially named detached shell commands
+		                "*detached-list*"
+		                "*Flycheck errors*"))
+	         (display-buffer-in-side-window)
+	         (side . bottom)
+	         (slot . 0)
            (window-width . 80)
-	       (window-height . 15))
+	         (window-height . 15))
 
           ;; rcmp
           (,(rx "rcmp:")
@@ -366,14 +392,15 @@
            (window-width . 100)
            (window-height . 15))
 
-	      (,(rx (or "*help*"
+	        (,(rx (or "*help*"
+                    "*lsp-help*"
                     "*messages*"
-		            "*info*"))
-	       (display-buffer-reuse-window
-	        display-buffer-in-side-window)
-	       (side . right)
-	       (slot . 0)
-	       (window-width . 80))
+		                "*info*"))
+	         (display-buffer-reuse-window
+	          display-buffer-in-side-window)
+	         (side . right)
+	         (slot . 0)
+	         (window-width . 80))
 
           (,(rx (or "*devdocs*"
                     "*Apropos*"
@@ -398,17 +425,17 @@
            (side . top)
            (slot . 0))
 
-	      (,(rx (or
-		         "*xref*"
-		         "Magit"
-		         "converge.org"
-		         "COMMIT_EDITMSG"))
-	       (display-buffer-in-side-window)
-	       (side . left)
-	       (slot . 0)
-	       (window-width . 80)
-	       (window-parameters
-	        (no-delete-other-windows . t)))
+	        (,(rx (or
+		             "*xref*"
+		             "Magit"
+		             "converge.org"
+		             "COMMIT_EDITMSG"))
+	         (display-buffer-in-side-window)
+	         (side . left)
+	         (slot . 0)
+	         (window-width . 80)
+	         (window-parameters
+	          (no-delete-other-windows . t)))
 
           (,(rx (or "*ekg tags"
                     "*EKG Note List"
@@ -421,11 +448,11 @@
                     "*Forge Repositories*"
                     "*forge: "))
            (display-buffer-in-side-window)
-	       (side . left)
-	       (slot . 1)
-	       (window-width . 80)
-	       (window-parameters
-	        (no-delete-other-windows . t)))
+	         (side . left)
+	         (slot . 1)
+	         (window-width . 80)
+	         (window-parameters
+	          (no-delete-other-windows . t)))
 
           (,(rx (or (seq (+ numeric) ";new-comment")))
            (display-buffer-in-side-window)
@@ -440,7 +467,7 @@
     (interactive)
     (dolist (win (window-list))
       (if (equal "*Help*" (buffer-name (window-buffer win)))
-	      (delete-window win))))
+	        (delete-window win))))
   (global-set-key [ersatz-c-z] 'ii/close-help-window)
 
   ;; Some backup magic.  I hate losing things.
@@ -465,18 +492,18 @@ save it in `ffap-file-at-point-line-number' variable."
            (name
             (or (condition-case nil
                     (and (not (string-match "//" string)) ; foo.com://bar
-			             (substitute-in-file-name string))
+			                   (substitute-in-file-name string))
                   (error nil))
-		        string))
+		            string))
            (line-number-string
             (and (string-match ":[0-9]+" name)
-		         (substring name (1+ (match-beginning 0)) (match-end 0))))
+		             (substring name (1+ (match-beginning 0)) (match-end 0))))
            (line-number
             (and line-number-string
-		         (string-to-number line-number-string))))
+		             (string-to-number line-number-string))))
       (if (and line-number (> line-number 0))
           (setq ffap-file-at-point-line-number line-number)
-	    (setq ffap-file-at-point-line-number nil))))
+	      (setq ffap-file-at-point-line-number nil))))
 
   (defadvice find-file-at-point (after ffap-goto-line-number activate)
     "If `ffap-file-at-point-line-number' is non-nil goto this line."
@@ -653,18 +680,18 @@ save it in `ffap-file-at-point-line-number' variable."
                       :foreground (nord-color "aurora-0")
                       :height 2.2)
   :bind (("M-o" . ace-window)
-	     ([ersatz-c-return] . ace-window)))
+	       ([ersatz-c-return] . ace-window)))
 
 (use-package zoom-window
   :straight t
   :bind (("M-z" . zoom-window-zoom)
-	     ([ersatz-m-z] . zoom-window-zoom))
+	       ([ersatz-m-z] . zoom-window-zoom))
   :config
   (defun ii/enlarge-on-zoom (&rest r)
     "When zooming a window, enlarge the text; reverse the
  modification when the window is un-zoomed."
     (if (zoom-window--enable-p)
-	    (text-scale-set 2)
+	      (text-scale-set 2)
       (text-scale-set 0)))
   (advice-add #'zoom-window-zoom :after #'ii/enlarge-on-zoom))
 
@@ -759,8 +786,8 @@ save it in `ffap-file-at-point-line-number' variable."
   :bind ("s-p" . ii/crdt/body)
   :config
   (defhydra ii/crdt (:color pink
-			                :hint nil
-			                :exit t)
+			                      :hint nil
+			                      :exit t)
     "
 CRDT Actions
 
@@ -946,9 +973,12 @@ _v_: visualize mode       _D_: disconnect
   :straight t
   :bind (("C-x b" . consult-buffer)
          ("M-g M-g" . consult-goto-line)
-         ("M-i" . consult-imenu)
+         ("M-s p" . consult-project-buffer)
+         ("M-s i" . consult-imenu-multi)
          ("M-s l" . consult-line)
          ("M-s d" . consult-find)
+         ("M-s g" . consult-ripgrep)
+         ("M-i" . consult-imenu)
          ("C-x r b" . consult-bookmark)
          ("C-c m" . consult-mode-command)
          ("M-y" . consult-yank-pop)))
@@ -956,6 +986,30 @@ _v_: visualize mode       _D_: disconnect
 
 (use-package orderless
   :straight t)
+
+(use-package wgrep
+  :straight t)
+
+(use-package symbol-overlay
+  :straight t)
+
+(use-package embark
+  :straight t
+  :bind
+  (("C-." . embark-act)         ;; pick some comfortable binding
+                                        ;   ("C-;" . embark-dwim)        ;; good alternative: M-.
+   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+  :config
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
+
+(use-package embark-consult
+  :straight t
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
 
 (use-package json-mode
   :after flymake-json
@@ -1103,7 +1157,6 @@ _v_: visualize mode       _D_: disconnect
 
 (use-package web-mode
   :straight t
-  :after hl-todo
   :mode (("\\.tpl\\.php\\'" . web-mode)
          ("\\.erb\\'" . web-mode)
          ("\\.mustache\\'" . web-mode)
@@ -1117,38 +1170,7 @@ _v_: visualize mode       _D_: disconnect
         web-mode-css-indent-offset 2
         web-mode-enable-auto-quoting nil
         web-mode-markup-indent-offset 2
-        web-mode-sql-indent-offset 2)
-  (add-to-list 'hl-todo-exclude-modes 'web-mode))
-
-(use-package hl-todo
-  :straight t
-  :bind
-  (:map hl-todo-mode-map
-        (("C-c o" . hl-todo-occur)
-         ("C-c i" . hl-todo-insert)))
-  :config
-  (global-hl-todo-mode 1)
-
-  (defun ii/hl-todo-insert (keyword)
-    "Advice around hl-todo-insert"
-    (interactive
-     (list (completing-read
-            "Insert keyword: "
-            (cl-mapcan (pcase-lambda (`(,keyword . ,face))
-                         (and (equal (regexp-quote keyword) keyword)
-                              (list (propertize keyword 'face
-                                                (hl-todo--combine-face face)))))
-                       hl-todo-keyword-faces))))
-    (move-end-of-line nil)
-    (newline)
-    (indent-for-tab-command)
-    (insert (concat keyword ": "))
-    (back-to-indentation)
-    (set-mark-command nil)
-    (move-end-of-line nil)
-    (comment-dwim nil))
-
-  (advice-add 'hl-todo-insert :override #'ii/hl-todo-insert))
+        web-mode-sql-indent-offset 2))
 
 (use-package yasnippet
   :straight t
@@ -1230,10 +1252,10 @@ _v_: visualize mode       _D_: disconnect
   (lsp-completion-provider :none)
   (lsp-modeline-diagnostics-enable nil)
 
-  ;; This sure is hacky.  Why is lsp stuck at 0.14.0 (which fails with OTP 26)?
-  (lsp-elixir-ls-version "v0.19.0")
-  (lsp-elixir-ls-download-url
-   "https://github.com/elixir-lsp/elixir-ls/releases/download/v0.19.0/elixir-ls-v0.19.0.zip")
+  ;; ;; This sure is hacky.  Why is lsp stuck at 0.14.0 (which fails with OTP 26)?
+  ;; (lsp-elixir-ls-version "v0.22.0")
+  ;; (lsp-elixir-ls-download-url
+  ;;  "https://github.com/elixir-lsp/elixir-ls/releases/download/v0.22.0/elixir-ls-v0.22.0.zip")
 
   :config
   ;; (lsp-register-custom-settings
@@ -1364,10 +1386,14 @@ _v_: visualize mode       _D_: disconnect
 ;; Elixir
 (use-package elixir-ts-mode
   :straight t
-  :after elixir-test
-  :bind (:map elixir-test-mode-map ("C-c e" . elixir-test-command-map))
-  :hook ((elixir-ts-mode . elixir-test-mode)
+  ;; :after elixir-test
+  ;; :bind (:map elixir-test-mode-map ("C-c e" . elixir-test-command-map))
+  :hook (;(elixir-ts-mode . elixir-test-mode)
          (elixir-ts-mode . ii/elixir-prettify-spec))
+  :custom
+  (lsp-elixir-server-command
+   `(,(ii/home-dir-file "projects/lexical/_build/dev/package/lexical/bin/start_lexical.sh")))
+
   :config
   (defun ii/elixir-prettify-spec ()
     (dolist (mapping
@@ -1384,27 +1410,42 @@ _v_: visualize mode       _D_: disconnect
               ;; '("do" . "〈")
               '("==" . "⩵")))
       (push mapping prettify-symbols-alist))
-    (prettify-symbols-mode 1))
-  )
+    (prettify-symbols-mode 1)))
 
-;; Elixir test.  This is kind of hacked together, I'm not yet sure why
-;; the use-package configuration is so broken.
-(use-package elixir-test
-  :straight '(elixir-test :type git
-                          :host github
-                          :repo "J3RN/elixir-test-mode")
-  :load-path "straight/repos/elixir-test-mode"
-  :config
-  ;; Stolen from https://tinyurl.com/ycxucjue
-  ;; via https://tinyurl.com/4f9am84x
-  (require 'ansi-color)
-  (defun endless/colorize-compilation ()
-    "Colorize from `compilation-filter-start' to `point'."
-    (let ((inhibit-read-only t))
-      (ansi-color-apply-on-region
-       compilation-filter-start (point))))
+;; this doesn't work well (comint buffers don't send tabs and so
+;; completion doesn't happen.  i like the functionality though so
+;; maybe there's potential in replacing comint with term?
+(use-package inf-elixir
+  :straight t
+  :bind (("C-c i i" . 'inf-elixir)
+         ("C-c i p" . 'inf-elixir-project)
+         ("C-c i l" . 'inf-elixir-send-line)
+         ("C-c i r" . 'inf-elixir-send-region)
+         ("C-c i b" . 'inf-elixir-send-buffer)
+         ("C-c i R" . 'inf-elixir-reload-module)))
 
-  (add-hook 'compilation-filter-hook #'endless/colorize-compilation))
+
+;; This was a little broken in v30 but something i might return to.
+;;
+;;
+;; ;; Elixir test.  This is kind of hacked together, I'm not yet sure why
+;; ;; the use-package configuration is so broken.
+;; (use-package elixir-test
+;;   :straight '(elixir-test :type git
+;;                           :host github
+;;                           :repo "J3RN/elixir-test-mode")
+;;   :load-path "straight/repos/elixir-test-mode"
+;;   :config
+;;   ;; Stolen from https://tinyurl.com/ycxucjue
+;;   ;; via https://tinyurl.com/4f9am84x
+;;   (require 'ansi-color)
+;;   (defun endless/colorize-compilation ()
+;;     "Colorize from `compilation-filter-start' to `point'."
+;;     (let ((inhibit-read-only t))
+;;       (ansi-color-apply-on-region
+;;        compilation-filter-start (point))))
+
+;;   (add-hook 'compilation-filter-hook #'endless/colorize-compilation))
 
 
 ;; rcmp: not part of any package but useful with elixir projects
@@ -1485,7 +1526,7 @@ VTerm)."
 
 (defun rcmp/buffer-name ()
   "Return the rcmp compile buffer name."
- (format "rcmp: %s" (project-name (project-current))))
+  (format "rcmp: %s" (project-name (project-current))))
 
 (global-set-key (kbd "<f12>") #'rcmp)
 (global-set-key (kbd "M-<f12>") #'rcmp/quit-window)
@@ -1849,7 +1890,10 @@ VTerm)."
 ;; ii/slack-subscribed-channels.
 
 (use-package slack
-  :straight t
+  :straight '(slack :type git
+                    :host github
+                    :repo "isamert/emacs-slack")
+
   :if (file-exists-p (ii/home-dir-file ".emacs-slack-config"))
   :after hydra
   :bind   ("s-s" . slack-mode-hydra/body)
@@ -2457,7 +2501,7 @@ Completion is available."))
 
 (defun ii/reload-safari ()
   "Reload the topmost Safari tab via Applescript"
-  (interactive)ahk
+  (interactive)
   (do-applescript "
 tell application \"Safari\"
   set docUrl to URL of document 1
