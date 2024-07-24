@@ -241,6 +241,7 @@
 (use-package emacs
   :bind (("C-M-SPC" . cycle-spacing)
 	       ("<f5>" . scratch-buffer)
+         ("H-/" . hippie-expand)
 	       ("C-+" . text-scale-increase)
 	       ("C--" . text-scale-decrease)
 	       ("C-=" . ii/text-scale-reset)
@@ -445,6 +446,7 @@
 
           (,(rx (or "*deadgrep"
                     "*Occur*"
+                    "*elixir-test-output"
                     "*Forge Repositories*"
                     "*forge: "))
            (display-buffer-in-side-window)
@@ -546,6 +548,9 @@ save it in `ffap-file-at-point-line-number' variable."
   ;; enable indentation+completion using tab
   (setq tab-always-indent 'complete)
 
+  ;; try global line highlighting
+  (global-hl-line-mode 1)
+
   ) ;;; end (use-package emacs ...)
 
 
@@ -562,11 +567,31 @@ save it in `ffap-file-at-point-line-number' variable."
     (load (ii/emacs-dir-file "unicode-mapping.el")))
   (unicode-fonts-setup))
 
+(use-package expand-region
+  :straight t
+  :bind ("H-r" . er/expand-region))
+
+(use-package dimmer
+  :straight t
+  :config
+  (setq dimmer-fraction 0.2)
+  (setq dimmer-adjustment-mode :foreground)
+  (dimmer-mode 1))
 
 (use-package eros
   :straight t
   :config
   (eros-mode 1))
+
+;; `one-tab-per-project' depends on `unique-dir-name', which is not on MELPA
+(use-package unique-dir-name
+  :straight (:host github :repo "abougouffa/unique-dir-name"))
+
+(use-package one-tab-per-project
+  :straight (:host github :repo "abougouffa/one-tab-per-project")
+  :after project
+  :init
+  (otpp-mode 1))
 
 (use-package replace
   :config
@@ -1207,6 +1232,10 @@ _v_: visualize mode       _D_: disconnect
                       :background 'unspecified
                       :foreground (nord-color "aurora-0")))
 
+(use-package flycheck-credo
+  :straight t
+  :after flycheck)
+
 (use-package eldoc
   :custom
   (eldoc-echo-area-prefer-doc-buffer t))
@@ -1253,9 +1282,9 @@ _v_: visualize mode       _D_: disconnect
   (lsp-modeline-diagnostics-enable nil)
 
   ;; ;; This sure is hacky.  Why is lsp stuck at 0.14.0 (which fails with OTP 26)?
-  ;; (lsp-elixir-ls-version "v0.22.0")
+  ;; (lsp-elixir-ls-version "v0.22.1")
   ;; (lsp-elixir-ls-download-url
-  ;;  "https://github.com/elixir-lsp/elixir-ls/releases/download/v0.22.0/elixir-ls-v0.22.0.zip")
+  ;;  "https://github.com/elixir-lsp/elixir-ls/releases/download/v0.22.1/elixir-ls-v0.22.1.zip")
 
   :config
   ;; (lsp-register-custom-settings
@@ -1386,14 +1415,14 @@ _v_: visualize mode       _D_: disconnect
 ;; Elixir
 (use-package elixir-ts-mode
   :straight t
-  ;; :after elixir-test
-  ;; :bind (:map elixir-test-mode-map ("C-c e" . elixir-test-command-map))
-  :hook (;(elixir-ts-mode . elixir-test-mode)
+  :after elixir-test
+  :bind (:map elixir-test-mode-map ("C-c e" . elixir-test-command-map))
+  :hook ((elixir-ts-mode . elixir-test-mode)
          (elixir-ts-mode . ii/elixir-prettify-spec))
   :custom
   (lsp-elixir-server-command
    `(,(ii/home-dir-file "projects/lexical/_build/dev/package/lexical/bin/start_lexical.sh")))
-
+  (elixir-test-base-cmd "mix testall")
   :config
   (defun ii/elixir-prettify-spec ()
     (dolist (mapping
@@ -1430,22 +1459,26 @@ _v_: visualize mode       _D_: disconnect
 ;;
 ;; ;; Elixir test.  This is kind of hacked together, I'm not yet sure why
 ;; ;; the use-package configuration is so broken.
-;; (use-package elixir-test
-;;   :straight '(elixir-test :type git
-;;                           :host github
-;;                           :repo "J3RN/elixir-test-mode")
-;;   :load-path "straight/repos/elixir-test-mode"
-;;   :config
-;;   ;; Stolen from https://tinyurl.com/ycxucjue
-;;   ;; via https://tinyurl.com/4f9am84x
-;;   (require 'ansi-color)
-;;   (defun endless/colorize-compilation ()
-;;     "Colorize from `compilation-filter-start' to `point'."
-;;     (let ((inhibit-read-only t))
-;;       (ansi-color-apply-on-region
-;;        compilation-filter-start (point))))
+(use-package elixir-test
+  :straight '(elixir-test :type git
+                          :host github
+                          :repo "J3RN/elixir-test-mode")
+  :load-path "straight/repos/elixir-test-mode"
+  :init
+  (defun derived-mode-set-keymap (arg)
+    "provide missing fun"
+    (message "called derived-mode-set-keymap"))
+  :config
+  ;; Stolen from https://tinyurl.com/ycxucjue
+  ;; via https://tinyurl.com/4f9am84x
+  (require 'ansi-color)
+  (defun endless/colorize-compilation ()
+    "Colorize from `compilation-filter-start' to `point'."
+    (let ((inhibit-read-only t))
+      (ansi-color-apply-on-region
+       compilation-filter-start (point))))
 
-;;   (add-hook 'compilation-filter-hook #'endless/colorize-compilation))
+  (add-hook 'compilation-filter-hook #'endless/colorize-compilation))
 
 
 ;; rcmp: not part of any package but useful with elixir projects
@@ -2166,7 +2199,28 @@ VTerm)."
 
   ) ;; End of Slack configuration
 
+(defun ii/capture-value (arg)
+  "Capture the value following a colon + space in a line of text.
 
+For instance, in this line of text:
+
+   service: \"compute\",
+
+the non-propertized text \"compute\" will be added to the
+kill-ring (with the quotes).
+
+With a prefix argument single quotes will be substituted for double
+quotes."
+  (interactive "P")
+  (save-excursion
+    (beginning-of-line)
+    (re-search-forward ": \\(.+?\\),?$" (line-end-position))
+    (let ((target (match-string-no-properties 1)))
+      (when target
+        (when arg (setq target (s-replace "\"" "'" target)))
+        (kill-new target)
+        (message (format "%s added to kill-ring" target))))))
+(global-set-key (kbd "H-w") #'ii/capture-value)
 
 (defun ii/what-face (pos)
   "Show face at point.
