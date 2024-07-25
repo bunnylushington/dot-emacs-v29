@@ -1257,6 +1257,7 @@ _v_: visualize mode       _D_: disconnect
 (use-package lsp-mode
   :straight t
   :init
+  (add-to-list 'exec-path (ii/home-dir-file "elixir-ls"))
   (setq lsp-keymap-prefix "s-l"
         lsp-lens-place-position 'above-line)
   (defun ii/lsp-mode-setup-completion ()
@@ -1420,8 +1421,8 @@ _v_: visualize mode       _D_: disconnect
   :hook ((elixir-ts-mode . elixir-test-mode)
          (elixir-ts-mode . ii/elixir-prettify-spec))
   :custom
-  (lsp-elixir-server-command
-   `(,(ii/home-dir-file "projects/lexical/_build/dev/package/lexical/bin/start_lexical.sh")))
+  ;; (lsp-elixir-server-command
+  ;;  `(,(ii/home-dir-file "projects/lexical/_build/dev/package/lexical/bin/start_lexical.sh")))
   (elixir-test-base-cmd "mix testall")
   :config
   (defun ii/elixir-prettify-spec ()
@@ -1464,6 +1465,7 @@ _v_: visualize mode       _D_: disconnect
                           :host github
                           :repo "J3RN/elixir-test-mode")
   :load-path "straight/repos/elixir-test-mode"
+  :bind (("H-t" . ii/elixir-test/body))
   :init
   (defun derived-mode-set-keymap (arg)
     "provide missing fun"
@@ -1472,6 +1474,49 @@ _v_: visualize mode       _D_: disconnect
   ;; Stolen from https://tinyurl.com/ycxucjue
   ;; via https://tinyurl.com/4f9am84x
   (require 'ansi-color)
+
+  (defun elixir-test-extras-credo ()
+    (interactive)
+    (elixir-test--run-test (vector "mix" "credo" nil)))
+
+  (defun elixir-test-extras-doctor ()
+    (interactive)
+    (elixir-test--run-test (vector "mix" "doctor" nil)))
+
+  (defun elixir-test-extras-dialyzer ()
+    (interactive)
+    (elixir-test--run-test (vector "mix" "dialyzer" nil)))
+
+  (defhydra ii/elixir-test (:color pink
+                                   :hint nil
+                                   :exit t)
+    "
+Elixir Test
+
+_s_: test at point     _l_: rerun last test
+_f_: test file         _u_: test parent directory
+_d_: test directory    _._: rerun failed test
+_a_: test all          _t_: toggle implementation/test
+
+_c_: credo test
+_o_: doctor test
+_y_: dialyzer
+
+"
+    ("s" elixir-test-at-point)
+    ("f" elixir-test-file)
+    ("d" elixir-test-directory)
+    ("a" elixir-test-all)
+    ("l" elixir-test-rerun-last)
+    ("u" elixir-test-up)
+    ("." elixir-test-failed)
+    ("t" elixir-test-toggle-implementation)
+    ("c" elixir-test-extras-credo)
+    ("o" elixir-test-extras-doctor)
+    ("y" elixir-test-extras-dialyzer)
+    ("q" nil "quit" :color build))
+
+
   (defun endless/colorize-compilation ()
     "Colorize from `compilation-filter-start' to `point'."
     (let ((inhibit-read-only t))
