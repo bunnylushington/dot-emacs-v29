@@ -241,11 +241,13 @@
 (use-package emacs
   :bind (("C-M-SPC" . cycle-spacing)
 	       ("<f5>" . scratch-buffer)
-         ("H-/" . hippie-expand)
+           ("H-/" . hippie-expand)
 	       ("C-+" . text-scale-increase)
 	       ("C--" . text-scale-decrease)
 	       ("C-=" . ii/text-scale-reset)
-         ("s-d" . ii/toggle-dedicate-vterm-buffer)
+           ("s-d" . ii/toggle-dedicate-vterm-buffer)
+           ("H-," . xref-go-back)
+           ("H-." . xref-find-definitions)
 	       ("C-c w" . display-fill-column-indicator-mode))
 
   :hook ((after-save . executable-make-buffer-file-executable-if-script-p))
@@ -315,9 +317,10 @@
 
   (setq ii/exec-path
 	      `("/usr/local/bin"
-	        "/opt/homebrew/bin"
-	        ,(ii/home-dir-file "go/bin")))
+	        "/opt/homebrew/bin"))
+	        ;; ,(ii/home-dir-file "go/bin")))
   (mapc (lambda (path) (add-to-list 'exec-path path)) ii/exec-path)
+  (setenv "PATH" (concat (getenv "PATH") ":/opt/homebrew/bin:/usr/local/bin"))
 
   (defun ii/text-scale-reset ()
     "Reset the text scale to zero."
@@ -567,10 +570,6 @@ save it in `ffap-file-at-point-line-number' variable."
     (load (ii/emacs-dir-file "unicode-mapping.el")))
   (unicode-fonts-setup))
 
-(use-package expand-region
-  :straight t
-  :bind ("H-r" . er/expand-region))
-
 (use-package dimmer
   :straight t
   :config
@@ -741,6 +740,45 @@ save it in `ffap-file-at-point-line-number' variable."
   :after dired
   :config
   (add-hook 'dired-mode-hook 'dired-collapse-mode))
+
+(use-package gptel
+  :straight t
+  :bind (("H-a" . gptel-menu))
+  :config
+
+  (defun ii/add-tree-to-gptel-context (path ext)
+    "Add all files in PATH with extension EXT to gptel context"
+    (interactive)
+    (let ((extension (rx (seq "." (literal ext) line-end))))
+      (dolist (f (directory-files-recursively path extension))
+        (gptel-add-file f))))
+
+  (defun ii/tailscale-address (for)
+    "Return the Tailscale IP address for the host matching FOR."
+    (shell-command-to-string (concat "tailscale status 2>/dev/null "
+                                     "| grep " for
+                                     "| cut -w -f 1 "
+                                     "| tr -d '\n'")))
+
+  (defun ii/copy-tailscale-address ()
+    "Copy the Tailscale IP address for host."
+    (interactive)
+    (let* ((cmd-output
+            (shell-command-to-string
+             (concat "tailscale status 2>/dev/null "
+                     "| cut -w -f 2 ")))
+           (hosts (split-string cmd-output "\n" t))
+           (for (completing-read "Host: " hosts))
+           (ip (ii/tailscale-address for)))
+      (kill-new ip)
+      (message ip)))
+
+  (setq
+   gptel-model 'codegemma:7b
+   gptel-backend (gptel-make-ollama "Ollama"
+                   :host (concat (ii/tailscale-address "ollama") ":11434")
+                   :stream t
+                   :models '(codegemma:7b codellama:13b sqlcoder:15b))))
 
 (use-package all-the-icons
   :straight t
@@ -996,16 +1034,27 @@ _v_: visualize mode       _D_: disconnect
 
 (use-package consult
   :straight t
+  :init
+  (setq register-preview-delay 0.5
+        register-preview-function #'consult-register-format)
+
+  (advice-add #'register-preview
+              :override #'consult-register-window)
+
   :bind (("C-x b" . consult-buffer)
          ("M-g M-g" . consult-goto-line)
          ("M-s p" . consult-project-buffer)
          ("M-s i" . consult-imenu-multi)
          ("M-s l" . consult-line)
+         ("C-s" . consult-line)
+         ("C-S-s" . consult-line-multi)
          ("M-s d" . consult-find)
          ("M-s g" . consult-ripgrep)
          ("M-i" . consult-imenu)
          ("C-x r b" . consult-bookmark)
          ("C-c m" . consult-mode-command)
+         ("H-r s" . consult-register-store)
+         ("H-r i" . consult-register)
          ("M-y" . consult-yank-pop)))
 
 
