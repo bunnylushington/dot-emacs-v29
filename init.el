@@ -15,6 +15,10 @@
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 
+(use-package exec-path-from-shell
+  :straight t
+  :config
+  (exec-path-from-shell-initialize))
 
 ;; MacOS specific configuration
 (if (eql system-type 'darwin)
@@ -316,8 +320,9 @@
   (setq custom-file (ii/emacs-dir-file "custom-file.el"))
 
   (setq ii/exec-path
-	      `("/usr/local/bin"
-	        "/opt/homebrew/bin"))
+	    `("/usr/local/bin"
+          ,(ii/home-dir-file "projects/google-cloud-sdk/bin/gcloud")
+	      "/opt/homebrew/bin"))
 	;; ,(ii/home-dir-file "go/bin")))
   (mapc (lambda (path) (add-to-list 'exec-path path)) ii/exec-path)
   (setenv "PATH" (concat (getenv "PATH") ":/opt/homebrew/bin:/usr/local/bin"))
@@ -1085,8 +1090,7 @@ _v_: visualize mode       _D_: disconnect
          ("M-g M-g" . consult-goto-line)
          ("H-f"     . consult-project-buffer)
          ("M-s i"   . consult-imenu-multi)
-         ("C-s"     . consult-line)
-         ("C-S-s"   . consult-line-multi)
+         ("C-S-s"   . consult-line)
          ("M-s d"   . consult-fd)
          ("M-s g"   . consult-ripgrep)
          ("M-i"     . consult-imenu)
@@ -1382,6 +1386,11 @@ _v_: visualize mode       _D_: disconnect
   (setq lsp-headerline-breadcrumb-enable nil)
   :commands lsp)
 
+(use-package consult-lsp
+  :straight (:host github :repo "gagbo/consult-lsp")
+  :after lsp
+  :bind ([remap xref-find-apropos] . consult-lsp-symbols))
+
 (use-package lsp-pyright
   :straight t
   :hook ((python-mode . (lambda ()
@@ -1414,6 +1423,8 @@ _v_: visualize mode       _D_: disconnect
   :straight t)
 
 (use-package treesit
+  :bind (("M-<down>" . treesit-end-of-defun)
+         ("M-<up>" . treesit-beginning-of-defun))
   :init
   (setq treesit-language-source-alist
         '((bash "https://github.com/tree-sitter/tree-sitter-bash")
@@ -1430,7 +1441,8 @@ _v_: visualize mode       _D_: disconnect
           (toml "https://github.com/tree-sitter/tree-sitter-toml")
           (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
           (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
-          (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
+          ;; (yaml "https://github.com/ikatyang/tree-sitter-yaml")
+          ))
   )
 
 (use-package treesit-auto
