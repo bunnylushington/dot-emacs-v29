@@ -241,13 +241,13 @@
 (use-package emacs
   :bind (("C-M-SPC" . cycle-spacing)
 	       ("<f5>" . scratch-buffer)
-           ("H-/" . hippie-expand)
+         ("H-/" . hippie-expand)
 	       ("C-+" . text-scale-increase)
 	       ("C--" . text-scale-decrease)
 	       ("C-=" . ii/text-scale-reset)
-           ("s-d" . ii/toggle-dedicate-vterm-buffer)
-           ("H-," . xref-go-back)
-           ("H-." . xref-find-definitions)
+         ("s-d" . ii/toggle-dedicate-vterm-buffer)
+         ("H-," . xref-go-back)
+         ("H-." . xref-find-definitions)
 	       ("C-c w" . display-fill-column-indicator-mode))
 
   :hook ((after-save . executable-make-buffer-file-executable-if-script-p))
@@ -318,7 +318,7 @@
   (setq ii/exec-path
 	      `("/usr/local/bin"
 	        "/opt/homebrew/bin"))
-	        ;; ,(ii/home-dir-file "go/bin")))
+	;; ,(ii/home-dir-file "go/bin")))
   (mapc (lambda (path) (add-to-list 'exec-path path)) ii/exec-path)
   (setenv "PATH" (concat (getenv "PATH") ":/opt/homebrew/bin:/usr/local/bin"))
 
@@ -432,6 +432,7 @@
 	        (,(rx (or
 		             "*xref*"
 		             "Magit"
+                 "*Embark Export"
 		             "converge.org"
 		             "COMMIT_EDITMSG"))
 	         (display-buffer-in-side-window)
@@ -1037,25 +1038,63 @@ _v_: visualize mode       _D_: disconnect
   :init
   (setq register-preview-delay 0.5
         register-preview-function #'consult-register-format)
-
   (advice-add #'register-preview
               :override #'consult-register-window)
+  :config
+  ;; ensure that External links appear in the completions under its
+  ;; own category
+  (add-to-list 'consult-bookmark-narrow
+               '(200 "External" bmkp-jump-url-browse))
 
-  :bind (("C-x b" . consult-buffer)
+  (defhydra ii/consult-hydra (:color pink
+                                     :exit t
+                                     :hint nil)
+    "
+  ^Buffers^                 ^Registers^   ^Navigation^                ^Search^
+  ^^^^^^^^^---------------------------------------------------------------------------------
+  _b_: switch               _r_: insert   _g_: goto line              _s_: line
+  _B_: switch (other tab)   _R_: store    _x_: jump to mark           _S_: line multi
+  _p_: switch (project)     ^ ^           _X_: jump to global mark    _K_: keep lines
+  _m_: bookmark             ^ ^           _i_: imenu                  _h_: focus lines
+  ^ ^                       ^ ^           _I_: imenu multi            _f_: ripgrep
+  ^ ^                       ^ ^           ^ ^                         _F_: fd
+  "
+    ("b" consult-buffer)
+    ("B" consult-buffer-other-tab)
+    ("p" consult-project-buffer)
+    ("m" consult-bookmark)
+    ("r" consult-register)
+    ("R" consult-register-store)
+    ("g" consult-goto-line)
+    ("x" consult-mark)
+    ("X" consult-global-mark)
+    ("i" consult-imenu)
+    ("I" consult-imenu-multi)
+    ("s" consult-line)
+    ("S" consult-line-multi)
+    ("K" consult-keep-lines)
+    ("h" consult-focus-lines)
+    ("f" consult-ripgrep)
+    ("F" consult-fd)
+
+    ("q" nil "quit" :color blue))
+
+  :custom
+  (consult-line-start-from-top t)
+  :bind (("C-x b"   . consult-buffer)
          ("M-g M-g" . consult-goto-line)
-         ("M-s p" . consult-project-buffer)
-         ("M-s i" . consult-imenu-multi)
-         ("M-s l" . consult-line)
-         ("C-s" . consult-line)
-         ("C-S-s" . consult-line-multi)
-         ("M-s d" . consult-find)
-         ("M-s g" . consult-ripgrep)
-         ("M-i" . consult-imenu)
+         ("H-f"     . consult-project-buffer)
+         ("M-s i"   . consult-imenu-multi)
+         ("C-s"     . consult-line)
+         ("C-S-s"   . consult-line-multi)
+         ("M-s d"   . consult-fd)
+         ("M-s g"   . consult-ripgrep)
+         ("M-i"     . consult-imenu)
          ("C-x r b" . consult-bookmark)
-         ("C-c m" . consult-mode-command)
-         ("H-r s" . consult-register-store)
-         ("H-r i" . consult-register)
-         ("M-y" . consult-yank-pop)))
+         ("H-r s"   . consult-register-store)
+         ("H-r i"   . consult-register)
+         ("H-;"     . ii/consult-hydra/body)
+         ("M-y"     . consult-yank-pop)))
 
 
 (use-package orderless
