@@ -377,6 +377,13 @@
            (window-width . 80)
 	         (window-height . 15))
 
+            ;; slack
+            (,(rx "*slack")
+             (display-buffer-in-tab display-buffer-in-direction)
+             (ignore-current-tab . t)
+             (direction . left)
+             (tab-name . "Slack Channels"))
+
           ;; rcmp
           (,(rx "rcmp:")
            (display-buffer-in-side-window)
@@ -489,6 +496,26 @@
     (if (consp arg) (save-buffer) (save-buffer 16)))
   (global-set-key [remap save-buffer] 'ii/save-buffer-force-backup)
   (global-set-key (kbd "C-x s") 'ii/save-buffer-force-backup)
+
+  (defun ii/tailscale-address (for)
+    "Return the Tailscale IP address for the host matching FOR."
+    (shell-command-to-string (concat "tailscale status 2>/dev/null "
+                                     "| grep " for
+                                     "| cut -w -f 1 "
+                                     "| tr -d '\n'")))
+
+  (defun ii/copy-tailscale-address ()
+    "Copy the Tailscale IP address for host."
+    (interactive)
+    (let* ((cmd-output
+            (shell-command-to-string
+             (concat "tailscale status 2>/dev/null "
+                     "| cut -w -f 2 ")))
+           (hosts (split-string cmd-output "\n" t))
+           (for (completing-read "Host: " hosts))
+           (ip (ii/tailscale-address for)))
+      (kill-new ip)
+      (message ip)))
 
   ;;
   ;; From https://www.emacswiki.org/emacs/FindFileAtPoint
@@ -759,26 +786,6 @@ save it in `ffap-file-at-point-line-number' variable."
       (dolist (f (directory-files-recursively path extension))
         (gptel-add-file f))))
 
-  (defun ii/tailscale-address (for)
-    "Return the Tailscale IP address for the host matching FOR."
-    (shell-command-to-string (concat "tailscale status 2>/dev/null "
-                                     "| grep " for
-                                     "| cut -w -f 1 "
-                                     "| tr -d '\n'")))
-
-  (defun ii/copy-tailscale-address ()
-    "Copy the Tailscale IP address for host."
-    (interactive)
-    (let* ((cmd-output
-            (shell-command-to-string
-             (concat "tailscale status 2>/dev/null "
-                     "| cut -w -f 2 ")))
-           (hosts (split-string cmd-output "\n" t))
-           (for (completing-read "Host: " hosts))
-           (ip (ii/tailscale-address for)))
-      (kill-new ip)
-      (message ip)))
-
   (setq
    gptel-model 'codegemma:7b
    gptel-backend (gptel-make-ollama "Ollama"
@@ -813,10 +820,10 @@ save it in `ffap-file-at-point-line-number' variable."
 (use-package url
   :config
   (defun ii/web-search ()
-    "Search DuckDuckGo from Emacs."
+    "Search Kagi from Emacs."
     (interactive)
     (let* ((term (read-string "Search term: "))
-           (url (format "\"https://ddg.gg?q=%s\"" (url-hexify-string term)))
+           (url (format "\"https://kagi.com/search?q=%s\"" (url-hexify-string term)))
            (cmd (concat "open " url)))
       (start-process-shell-command "" nil cmd)))
 
@@ -974,6 +981,15 @@ _v_: visualize mode       _D_: disconnect
 
   (fido-mode -1)
   (vertico-mode))
+
+(use-package prescient
+  :straight t
+  :config (prescient-persist-mode 1))
+
+(use-package vertico-prescient
+  :straight t
+  :config (vertico-prescient-mode 1))
+
 
 ;; Marginalia
 (use-package marginalia
@@ -1796,6 +1812,7 @@ VTerm)."
 
 (use-package ekg-extras
   :after ekg
+  :bind (("H-e" . ekg-extras/hydra))
   :straight '(ekg-extras :type git
                          :host codeberg
                          :repo "bunnylushington/ekg-extras"))
