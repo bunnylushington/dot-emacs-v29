@@ -2134,6 +2134,7 @@ VTerm)."
    lui-time-stamp-position 'right-margin
    lui-flyspell-p nil
    lui-fill-type nil
+   lui-scroll-behavior 'post-output
    slack-log-level 'debug
    slack-typing-visibility 'never
    slack-buffer-emojify 't
@@ -2306,10 +2307,11 @@ VTerm)."
            (slack-ts (concat "slack-ts/" msg-time)))
       (set-text-properties 0 (length text) nil text)
       (when (fboundp 'ekg-save-note)
-        (ekg-save-note (ekg-note-create text
-                                        'gfm-mode
-                                        `(,(ekg-tag-for-date)
-                                          "slack" ,slack-tag ,slack-ts))))))
+        (ekg-save-note (ekg-note-create
+                        :text text
+                        :mode 'gfm-mode
+                        :tags `(,(ekg-tag-for-date)
+                                "slack" ,slack-tag ,slack-ts))))))
 
   ;; attach add-link to the mrkdwn parser
   (advice-add 'slack-mrkdwn-add-face :after #'ii/slack-mrkdwn-add-link)
