@@ -361,6 +361,9 @@
   (setq switch-to-buffer-obey-display-actions t
 	      switch-to-buffer-in-dedicated-window 'pop)
 
+  (defun ii/delete-other-windows (window)
+    (delete-other-windows window))
+
   (setq display-buffer-alist
 	      `((,(rx (or "vterm"
 		                "VTerm"))
@@ -381,7 +384,8 @@
             (,(rx "*slack")
              (display-buffer-in-tab display-buffer-in-direction)
              (ignore-current-tab . t)
-             (direction . left)
+             (dedicated . t)
+             (body-function . ii/delete-other-windows)
              (tab-name . "Slack Channels"))
 
           ;; rcmp
@@ -1078,7 +1082,7 @@ _v_: visualize mode       _D_: disconnect
   _p_: switch (project)     ^ ^           _X_: jump to global mark    _K_: keep lines
   _m_: bookmark             ^ ^           _i_: imenu                  _h_: focus lines
   ^ ^                       ^ ^           _I_: imenu multi            _f_: ripgrep
-  ^ ^                       ^ ^           ^ ^                         _F_: fd
+  ^ ^                       ^ ^           _o_: outline                _F_: fd
   "
     ("b" consult-buffer)
     ("B" consult-buffer-other-tab)
@@ -1093,6 +1097,7 @@ _v_: visualize mode       _D_: disconnect
     ("I" consult-imenu-multi)
     ("s" consult-line)
     ("S" consult-line-multi)
+    ("o" consult-outline)
     ("K" consult-keep-lines)
     ("h" consult-focus-lines)
     ("f" consult-ripgrep)
@@ -1784,10 +1789,14 @@ VTerm)."
 
 (use-package ekg
   :straight t
+  :custom (ekg-display-note-template
+           (concat "\n%n(titled)\n%n(text 500)\n%n(id)%n(tagged)%n(other)"
+                   (make-string 40 ?_)))
   :config
 
   (set-face-attribute 'ekg-title nil
                       :foreground (nord-color "aurora-4")
+                      :height 1.3
                       :underline nil)
   (set-face-attribute 'ekg-metadata nil
                       :background (nord-color "polar-night-0")
@@ -1800,9 +1809,9 @@ VTerm)."
                       :height 1.3)
   (set-face-attribute 'ekg-tag nil
                       :box nil
-                      :background (nord-color "polar-night-0")
+                      ;; :background (nord-color "polar-night-0")
                       :foreground (nord-color "aurora-3")
-                      :height 1.0)
+                      :height 1.1)
 
   (global-set-key (kbd "<f9>") 'ekg-capture)
   (global-set-key (kbd "<f10>") 'ekg-show-notes-with-any-tags)
