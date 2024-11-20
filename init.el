@@ -93,7 +93,7 @@
 (add-hook 'eshell-mode-hook #'ii/nano-modeline-vterm-mode)
 
 (defun ii/nano-modeline-vterm-status ()
-  "Status to cisplay in vterm buffers."
+  "Status to display in vterm buffers."
   (nano-modeline-buffer-status
    (if (not (bound-and-true-p vterm-copy-mode)) ">_" "CP")))
 
@@ -244,15 +244,15 @@
 
 (use-package emacs
   :bind (("C-M-SPC" . cycle-spacing)
-	       ("<f5>" . scratch-buffer)
+	     ("<f5>" . scratch-buffer)
          ("H-/" . hippie-expand)
-	       ("C-+" . text-scale-increase)
-	       ("C--" . text-scale-decrease)
-	       ("C-=" . ii/text-scale-reset)
+	     ("C-+" . text-scale-increase)
+	     ("C--" . text-scale-decrease)
+	     ("C-=" . ii/text-scale-reset)
          ("s-d" . ii/toggle-dedicate-vterm-buffer)
          ("H-," . xref-go-back)
          ("H-." . xref-find-definitions)
-	       ("C-c w" . display-fill-column-indicator-mode))
+	     ("C-c w" . display-fill-column-indicator-mode))
 
   :hook ((after-save . executable-make-buffer-file-executable-if-script-p))
 
@@ -323,7 +323,7 @@
 	    `("/usr/local/bin"
           ,(ii/home-dir-file "projects/google-cloud-sdk/bin/gcloud")
 	      "/opt/homebrew/bin"))
-	;; ,(ii/home-dir-file "go/bin")))
+  ;; ,(ii/home-dir-file "go/bin")))
   (mapc (lambda (path) (add-to-list 'exec-path path)) ii/exec-path)
   (setenv "PATH" (concat (getenv "PATH") ":/opt/homebrew/bin:/usr/local/bin"))
 
@@ -359,34 +359,34 @@
 
   ;; Windowing
   (setq switch-to-buffer-obey-display-actions t
-	      switch-to-buffer-in-dedicated-window 'pop)
+	    switch-to-buffer-in-dedicated-window 'pop)
 
   (defun ii/delete-other-windows (window)
     (delete-other-windows window))
 
   (setq display-buffer-alist
-	      `((,(rx (or "vterm"
-		                "VTerm"))
-	         (display-buffer-reuse-window))
+	    `((,(rx (or "vterm"
+		            "VTerm"))
+	       (display-buffer-reuse-window))
 
-	        (,(rx (or "*detached shell command*"
-		                "*detached-session-output"
-		                "cmd: " ;; for specially named detached shell commands
-		                "*detached-list*"
-		                "*Flycheck errors*"))
-	         (display-buffer-in-side-window)
-	         (side . bottom)
-	         (slot . 0)
+	      (,(rx (or "*detached shell command*"
+		            "*detached-session-output"
+		            "cmd: " ;; for specially named detached shell commands
+		            "*detached-list*"
+		            "*Flycheck errors*"))
+	       (display-buffer-in-side-window)
+	       (side . bottom)
+	       (slot . 0)
            (window-width . 80)
-	         (window-height . 15))
+	       (window-height . 15))
 
-            ;; slack
-            (,(rx "*slack")
-             (display-buffer-in-tab display-buffer-in-direction)
-             (ignore-current-tab . t)
-             (dedicated . t)
-             (body-function . ii/delete-other-windows)
-             (tab-name . "Slack Channels"))
+          ;; ;; slack
+          ;; (,(rx "*slack")
+          ;;  (display-buffer-in-tab display-buffer-in-direction)
+          ;;  (ignore-current-tab . t)
+          ;;  (dedicated . t)
+          ;;  (window-width . 80)
+          ;;  (tab-name . "Slack Channels"))
 
           ;; rcmp
           (,(rx "rcmp:")
@@ -412,15 +412,15 @@
            (window-width . 100)
            (window-height . 15))
 
-	        (,(rx (or "*help*"
+	      (,(rx (or "*help*"
                     "*lsp-help*"
                     "*messages*"
-		                "*info*"))
-	         (display-buffer-reuse-window
-	          display-buffer-in-side-window)
-	         (side . right)
-	         (slot . 0)
-	         (window-width . 80))
+		            "*info*"))
+	       (display-buffer-reuse-window
+	        display-buffer-in-side-window)
+	       (side . right)
+	       (slot . 0)
+	       (window-width . 80))
 
           (,(rx (or "*devdocs*"
                     "*Apropos*"
@@ -445,18 +445,18 @@
            (side . top)
            (slot . 0))
 
-	        (,(rx (or
-		             "*xref*"
-		             "Magit"
+	      (,(rx (or
+		         "*xref*"
+		         "Magit"
                  "*Embark Export"
-		             "converge.org"
-		             "COMMIT_EDITMSG"))
-	         (display-buffer-in-side-window)
-	         (side . left)
-	         (slot . 0)
-	         (window-width . 80)
-	         (window-parameters
-	          (no-delete-other-windows . t)))
+		         "converge.org"
+		         "COMMIT_EDITMSG"))
+	       (display-buffer-in-side-window)
+	       (side . left)
+	       (slot . 0)
+	       (window-width . 80)
+	       (window-parameters
+	        (no-delete-other-windows . t)))
 
           (,(rx (or "*ekg tags"
                     "*EKG Note List"
@@ -470,11 +470,11 @@
                     "*Forge Repositories*"
                     "*forge: "))
            (display-buffer-in-side-window)
-	         (side . left)
-	         (slot . 1)
-	         (window-width . 80)
-	         (window-parameters
-	          (no-delete-other-windows . t)))
+	       (side . left)
+	       (slot . 1)
+	       (window-width . 80)
+	       (window-parameters
+	        (no-delete-other-windows . t)))
 
           (,(rx (or (seq (+ numeric) ";new-comment")))
            (display-buffer-in-side-window)
@@ -489,7 +489,7 @@
     (interactive)
     (dolist (win (window-list))
       (if (equal "*Help*" (buffer-name (window-buffer win)))
-	        (delete-window win))))
+	      (delete-window win))))
   (global-set-key [ersatz-c-z] 'ii/close-help-window)
 
   ;; Some backup magic.  I hate losing things.
@@ -534,18 +534,18 @@ save it in `ffap-file-at-point-line-number' variable."
            (name
             (or (condition-case nil
                     (and (not (string-match "//" string)) ; foo.com://bar
-			                   (substitute-in-file-name string))
+			             (substitute-in-file-name string))
                   (error nil))
-		            string))
+		        string))
            (line-number-string
             (and (string-match ":[0-9]+" name)
-		             (substring name (1+ (match-beginning 0)) (match-end 0))))
+		         (substring name (1+ (match-beginning 0)) (match-end 0))))
            (line-number
             (and line-number-string
-		             (string-to-number line-number-string))))
+		         (string-to-number line-number-string))))
       (if (and line-number (> line-number 0))
           (setq ffap-file-at-point-line-number line-number)
-	      (setq ffap-file-at-point-line-number nil))))
+	    (setq ffap-file-at-point-line-number nil))))
 
   (defadvice find-file-at-point (after ffap-goto-line-number activate)
     "If `ffap-file-at-point-line-number' is non-nil goto this line."
@@ -1785,7 +1785,7 @@ VTerm)."
 (use-package hl-line
   :config
   (set-face-attribute 'hl-line nil
-                      :background (nord-color "polar-night-0")))
+                      :background "#1f232c"))
 
 (use-package ekg
   :straight t
@@ -2086,6 +2086,8 @@ VTerm)."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(use-package ts :straight t)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Slack
 ;;
@@ -2094,12 +2096,13 @@ VTerm)."
 ;; ii/slack-subscribed-channels.
 
 (use-package slack
-  :straight '(slack :type git
-                    :host github
-                    :repo "isamert/emacs-slack")
+  :straight '(slack
+              :type git
+              :host github
+              :repo "emacs-slack/emacs-slack")
 
   :if (file-exists-p (ii/home-dir-file ".emacs-slack-config"))
-  :after hydra
+  :after (hydra ts)
   :bind   ("s-s" . slack-mode-hydra/body)
   :config
   (setq ii/enable-slack-logging nil)
@@ -2109,32 +2112,28 @@ VTerm)."
    :default t
    :token (auth-source-pick-first-password
            :host '("slack-emacs")
-           :user "token"
-           :type 'netrc
-           :max 1)
+           :user "token")
    :cookie (auth-source-pick-first-password
             :host '("slack-emacs")
-            :user "cookie"
-            :type 'netrc
-            :max 1)
+            :user "bunny^cookie")
    :mark-as-read-immediately nil
    :full-and-display-names t
    :visible-threads t
-   :websocket-event-log-enabled ii/enable-slack-logging
+   ;; :websocket-event-log-enabled ii/enable-slack-logging
    :modeline-enable nil
    :subscribed-channels ii/slack-subscribed-channels)
   (slack-start)
 
   ;; this is pretty wrong.  i can't quite figure out why this cookie
   ;; doesn't seem to be storable in the request/curl-cookie-jar.
-  (url-cookie-store
-   "d"
-   (auth-source-pick-first-password
-    :host '("slack-emacs")
-    :user "cookie"
-    :type 'netrc
-    :max 1)
-   nil ".slack.com" "/" t)
+  ;; (url-cookie-store
+  ;;  "d"
+  ;;  (auth-source-pick-first-password
+  ;;   :host '("slack-emacs")
+  ;;   :user "cookie"
+  ;;   :type 'netrc
+  ;;   :max 1)
+  ;;  nil ".slack.com" "/" t)
 
   (define-key lui-mode-map (kbd "<return>") 'newline)
   (define-key lui-mode-map (kbd "M-<return>") 'lui-send-input)
@@ -2252,7 +2251,7 @@ VTerm)."
   _i_: select IM           _t_: show/create thread
   _r_: select room         _y_: region to code block
   _p_: edit message        _k_: message to EKG
-                         _m_: embed mention
+  ^ ^                      _m_: embed mention
   "
     ("a" slack-all-threads)
     ("u" slack-select-unread-rooms)
