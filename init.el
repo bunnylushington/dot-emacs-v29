@@ -2773,13 +2773,15 @@ end tell"))
 
 (defun ii/help-fns ()
   (interactive)
+  (if (not (null ii/help-fns-history-list))
   (let ((symbol (intern
                  (completing-read "Function or Variable: "
                                   ii/help-fns-history-list))))
     (setq ii/help-fns-history-target symbol)
     (if (fboundp symbol)
         (describe-function symbol)
-      (describe-variable symbol))))
+      (describe-variable symbol)))
+  (message "Help Fns history is empty.")))
 
 (add-hook 'help-fns-describe-function-functions
           #'ii/help-fns-history)
