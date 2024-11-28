@@ -404,13 +404,17 @@
            (window-width . 80)
            (window-height . 15))
 
-          (,(rx (or "*Bookmark List*"
-                    "*CRDT Buffers"))
+          (,(rx (or "*CRDT Buffers"))
            (display-buffer-in-side-window)
            (side . bottom)
            (slot . 2)
            (window-width . 100)
            (window-height . 15))
+
+          (,(rx (or "*Edit Tags for Bookmark"
+                    "*Bookmark List*"))
+           (display-buffer-reuse-window
+            display-buffer-in-previous-window))
 
 	      (,(rx (or "*help*"
                     "*lsp-help*"
@@ -1070,6 +1074,8 @@ _v_: visualize mode       _D_: disconnect
   ;; own category
   (add-to-list 'consult-bookmark-narrow
                '(200 "External" bmkp-jump-url-browse))
+  (add-to-list 'consult-bookmark-narrow
+               '(?x "Temporary" bmkp-temporary-jump))
 
   (defhydra ii/consult-hydra (:color pink
                                      :exit t
@@ -2012,7 +2018,7 @@ VTerm)."
   :config
   (eshell-vterm-mode))
 
-(use-package eshell-fringe-status
+(use-package eshell-fringe-status;
   :straight t
   :after eshell
   :config
@@ -2748,3 +2754,44 @@ end tell"))
     (delete-file tmpfile)))
 
 (global-set-key (kbd "H-p") 'ii/print-to-pdf)
+
+(defvar ii/help-fns-history-list '()
+  "describe-function history")
+
+(defvar ii/help-fns-history-target nil
+  "used internally")
+
+
+;; function and variable help history
+;;
+;; Keeps a history of describe-function and describe-variable symbols
+;; for use in a completing read.  Binds "C-c f" to a function to
+;; navigate the history.
+(defvar ii/help-fns-history-list '()
+  "describe-function history")
+
+(defvar ii/help-fns-history-target nil
+  "used internally")
+
+(defun ii/help-fns-history (symbol)
+  (cond
+   ((eq symbol ii/help-fns-history-target) t)
+   (t (push symbol ii/help-fns-history-list))))
+
+(defun ii/help-fns ()
+  (interactive)
+  (let ((symbol (intern
+                 (completing-read "Function or Variable: "
+                                  ii/help-fns-history-list))))
+    (setq ii/help-fns-history-target symbol)
+    (if (fboundp symbol)
+        (describe-function symbol)
+      (describe-variable symbol))))
+
+(add-hook 'help-fns-describe-function-functions
+          #'ii/help-fns-history)
+
+(add-hook 'help-fns-describe-variable-functions
+          #'ii/help-fns-history)
+
+(keymap-set global-map "C-c f" #'ii/help-fns)
