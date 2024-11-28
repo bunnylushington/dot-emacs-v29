@@ -2755,13 +2755,6 @@ end tell"))
 
 (global-set-key (kbd "H-p") 'ii/print-to-pdf)
 
-(defvar ii/help-fns-history-list '()
-  "describe-function history")
-
-(defvar ii/help-fns-history-target nil
-  "used internally")
-
-
 ;; function and variable help history
 ;;
 ;; Keeps a history of describe-function and describe-variable symbols
