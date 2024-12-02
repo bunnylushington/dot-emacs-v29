@@ -269,6 +269,7 @@
    widget-image-enable nil
    tab-width 2
    window-combination-resize t
+   help-window-select t
 
    ;; fill column
    display-fill-column-indicator-character 124
