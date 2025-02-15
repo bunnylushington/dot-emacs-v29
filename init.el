@@ -244,7 +244,7 @@
 
 (use-package emacs
   :bind (("C-M-SPC" . cycle-spacing)
-	     ("<f5>" . scratch-buffer)
+	     ([ersatz-f5] . scratch-buffer)
          ("H-/" . hippie-expand)
 	     ("C-+" . text-scale-increase)
 	     ("C--" . text-scale-decrease)
@@ -270,6 +270,7 @@
    tab-width 2
    window-combination-resize t
    help-window-select t
+   dired-movement-style 'cycle
 
    ;; fill column
    display-fill-column-indicator-character 124
@@ -352,11 +353,17 @@
   ;; (see ii/close-help-window)
   (define-key key-translation-map (kbd "C-z") [ersatz-c-z])
 
+  ;; (scratch buffer)
+  (define-key key-translation-map (kbd "<f5>") [ersatz-f5])
+
   ;;
   ;; Quit emacs.  C-x C-c is rebound below to a more often used fn.  I
   ;; don't quit Emacs all that often and never use zap-to-char, so
   ;; here we are.
   (global-set-key (kbd "C-x <ersatz-c-z>") 'save-buffers-kill-terminal)
+
+  (global-set-key (kbd "C-M-<mouse-3>") 'tab-next)
+  (global-set-key (kbd "C-S-<mouse-3>") 'tab-previous)
 
   ;; Windowing
   (setq switch-to-buffer-obey-display-actions t
@@ -595,6 +602,9 @@ save it in `ffap-file-at-point-line-number' variable."
 
   ;; try global line highlighting
   (global-hl-line-mode 1)
+
+  ;; new in v30
+  (kill-ring-deindent-mode 1)
 
   ) ;;; end (use-package emacs ...)
 
@@ -881,8 +891,8 @@ _b_: switch buffers       _l_: list buffers
 _f_: follow user          _L_: list sessions
 _F_: stop follow user
 _v_: visualize mode       _D_: disconnect
-                        _X_: stop session
-                        _S_: stop sharing buffer
+^ ^                       _X_: stop session
+^ ^                       _S_: stop sharing buffer
 "
     ("s" crdt-share-buffer)
     ("b" crdt-switch-to-buffer)
@@ -1018,8 +1028,8 @@ _v_: visualize mode       _D_: disconnect
   (corfu-count 14)
   (corfu-scroll-margin 4)
   (corfu-cycle t)
-  (corfu-auto t)
-  (corfu-auto-delay 0.3)
+  (corfu-auto nil)
+  (corfu-auto-delay 1)
   (corfu-separator ?\s)
   (corfu-quit-at-boundary nil)
   (corfu-quit-no-match t)
@@ -1186,6 +1196,11 @@ _v_: visualize mode       _D_: disconnect
 (use-package forge
   :straight t
   :after magit)
+
+(use-package magit-todos
+  :straight t
+  :after magit
+  :config (magit-todos-mode 1))
 
 (use-package code-review
   :after magit
@@ -1379,6 +1394,7 @@ _v_: visualize mode       _D_: disconnect
   :init
   (add-to-list 'exec-path (ii/home-dir-file "elixir-ls"))
   (setq lsp-keymap-prefix "s-l"
+        lsp-lens-enable nil
         lsp-lens-place-position 'above-line)
   (defun ii/lsp-mode-setup-completion ()
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
@@ -1486,12 +1502,14 @@ _v_: visualize mode       _D_: disconnect
   :demand t
   :after (lsp-mode)
   :config
+  (require 'dap-dlv-go)
   (defun ii/lsp-go-save-hooks ()
     (add-hook 'before-save-hook #'lsp-format-buffer t t)
     (add-hook 'before-save-hook #'lsp-organize-imports t t))
 
   :custom
   (go-ts-mode-indent-offset 2)
+  (gofmt-command "goimports")
   :bind (("H-d" . ii/go-debug-var))
   :hook ((go-ts-mode . ii/set-tab-width)
          (go-ts-mode . ii/lsp-go-save-hooks)))
@@ -2150,9 +2168,9 @@ VTerm)."
    lui-flyspell-p nil
    lui-fill-type nil
    lui-scroll-behavior 'post-output
-   slack-log-level 'debug
+   slack-log-level 'info
    slack-typing-visibility 'never
-   slack-buffer-emojify 't
+   ;; slack-buffer-emojify 't
    slack-display-team-name nil
    slack-enable-wysiwyg 't
    slack-file-dir "~/Downloads"
@@ -2473,9 +2491,9 @@ We expect Cobra commands to be named <package>_<cmd>.go and from
 that we can generate a skeleton with the cobracmd yasnippet."
   (let* ((file (or filepath (buffer-file-name)))
          (bare-filename (ii/bare-buffer-filename file))
-         (file-parts (s-split "_" bare-filename))
-         (package (car file-parts))
-         (command (cadr file-parts)))
+         (file-parts (s-split "_" bare-filename t))
+         (package (s-join "_" (butlast file-parts)))
+         (command (car (last file-parts))))
     (cond ((eql e 'package) package)
           ((eql e 'command) command)
           ((eql e 'parent-command) (format "%sCmd" (s-titleize package)))
@@ -2714,6 +2732,11 @@ Completion is available."))
   (global-set-key (kbd "C-;") 'avy-goto-char)
   (global-set-key (kbd "C-'") 'avy-goto-char-timer))
 
+(use-package kubed
+  :straight t
+  :config
+  (setq kubed-default-context-and-namespace
+        `("" . "default")))
 
 (use-package tidal
   :straight t
@@ -2755,6 +2778,16 @@ end tell"))
     (delete-file tmpfile)))
 
 (global-set-key (kbd "H-p") 'ii/print-to-pdf)
+
+(defun ii/move-tab-to-ws ()
+  "clone tab as frame, move to workspace 7"
+  (interactive)
+  (call-interactively #'clone-frame)
+  (call-process "/opt/homebrew/bin/aerospace"
+                nil 0 nil
+                "move-node-to-workspace"
+                "--focus-follows-window"
+                "7"))
 
 ;; function and variable help history
 ;;
