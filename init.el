@@ -2779,8 +2779,8 @@ end tell"))
 
 (global-set-key (kbd "H-p") 'ii/print-to-pdf)
 
-(defun ii/move-tab-to-ws ()
-  "clone tab as frame, move to workspace 7"
+(defun ii/clone-frame-to-ws ()
+  "Clone frame (all tabs) and move to workspace 7"
   (interactive)
   (call-interactively #'clone-frame)
   (call-process "/opt/homebrew/bin/aerospace"
