@@ -690,6 +690,18 @@ save it in `ffap-file-at-point-line-number' variable."
                          "  "
                          ))
 
+  (defvar ii/tab-map
+    (let ((map (make-sparse-keymap)))
+      (define-key map "p" #'tab-bar-switch-to-prev-tab)
+      (define-key map "n" #'tab-bar-switch-to-next-tab)
+      (define-key map "l" #'tab-bar-switch-to-last-tab)
+      (define-key map "m" #'tab-bar-switch-to-tab)
+      (define-key map "r" #'tab-bar-switch-to-recent-tab)
+      map)
+    "Tab bar commands.")
+
+  (keymap-set global-map "s-." ii/tab-map)
+
   (defvar ii/timeclock-in-arrow
     (propertize " ➕ " 'display '(raise -0.20)))
 
