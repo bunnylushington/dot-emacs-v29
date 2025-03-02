@@ -286,7 +286,7 @@
    calendar-latitude 29.9510
    calendar-longitude -90.0715)
 
-  (midnight-mode)
+  (midnight-mode -1)
   (global-subword-mode 1)
   (repeat-mode 1)
   (undelete-frame-mode)
@@ -1266,7 +1266,7 @@ _v_: visualize mode       _D_: disconnect
   (qbs-add-predicates
    (make-qbs:predicate
     :name 'slack    :shortcut "C-s"
-    :test '(when (member major-mode '(slack-message-buffer-mode))
+    :test '(when (derived-mode-p '(slack-buffer-mode slack-mode))
              qbs:buffer-name))
    (make-qbs:predicate
     :name 'vterm
@@ -2276,7 +2276,7 @@ VTerm)."
   _i_: select IM           _t_: show/create thread
   _r_: select room         _y_: region to code block
   _p_: edit message        _k_: message to EKG
-  ^ ^                      _m_: embed mention
+  _l_: list slack buffers  _m_: embed mention
   "
     ("a" slack-all-threads)
     ("u" slack-select-unread-rooms)
@@ -2289,6 +2289,7 @@ VTerm)."
     ("p" slack-message-edit)
     ("k" ii/save-slack-message-to-ekg)
     ("m" slack-message-embed-mention)
+    ("l" qbs-slack)
     ("q" nil "quit" :color blue))
 
 
