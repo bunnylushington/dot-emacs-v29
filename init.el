@@ -427,7 +427,9 @@
 	      (,(rx (or "*help*"
                     "*lsp-help*"
                     "*messages*"
-		            "*info*"))
+		            "*info*"
+                    "*Forge Repositories*"
+                    "*forge: "))
 	       (display-buffer-reuse-window
 	        display-buffer-in-side-window)
 	       (side . right)
@@ -478,9 +480,7 @@
 
           (,(rx (or "*deadgrep"
                     "*Occur*"
-                    "*elixir-test-output"
-                    "*Forge Repositories*"
-                    "*forge: "))
+                    "*elixir-test-output"))
            (display-buffer-in-side-window)
 	       (side . left)
 	       (slot . 1)
@@ -601,13 +601,28 @@ save it in `ffap-file-at-point-line-number' variable."
   (setq tab-always-indent 'complete)
 
   ;; try global line highlighting
-  (global-hl-line-mode 1)
+  (global-hl-line-mode -1)
 
   ;; new in v30
   (kill-ring-deindent-mode 1)
 
   ) ;;; end (use-package emacs ...)
 
+(use-package ellama
+  :straight t
+  :ensure t
+  :bind ("<f7>" . ellama)
+  :config
+  (require 'llm-gemini)
+  (setq ellama-response-format "markdown")
+
+  ;; Configure ellama to use the Gemini provider
+  (setq ellama-provider
+        (make-llm-gemini
+         :key (auth-source-pick-first-password
+               :host "generativelanguage.googleapis.com")
+         :chat-model "gemini-2.5-pro-preview-03-25"
+         )))
 
 (use-package apropos
   :config
@@ -1207,7 +1222,22 @@ _v_: visualize mode       _D_: disconnect
 
 (use-package forge
   :straight t
-  :after magit)
+  :after magit
+  :config
+  (set-face-attribute 'forge-post-author nil
+                      :foreground (nord-color "polar-night-0"))
+  (set-face-attribute 'forge-post-date nil
+                      :foreground (nord-color "polar-night-2"))
+
+  (set-face-attribute 'magit-diff-hunk-heading nil
+                      :background (nord-color "frost-3"))
+  (set-face-attribute 'magit-diff-hunk-heading-highlight nil
+                      :background (nord-color "aurora-1")))
+
+(set-face-attribute 'header-line nil
+                    :extend t
+                    :background "dark red")
+
 
 (use-package magit-todos
   :straight t
@@ -1250,6 +1280,42 @@ _v_: visualize mode       _D_: disconnect
 
 (use-package yaml-mode
   :straight t)
+
+(use-package elfeed
+  :straight t
+  :config
+  (set-face-attribute 'message-header-other nil
+                      :foreground (nord-color "frost-1"))
+  (set-face-attribute 'message-header-subject nil
+                      :background (nord-color "polar-night-1")
+                      :foreground (nord-color "frost-0"))
+  (set-face-attribute 'elfeed-search-title-face nil
+                      :foreground (nord-color "frost-0"))
+  ;; note that youtube subscriptions can be imported via the handy converter at
+  ;; https://www.streamweasels.com/tools/youtube-channel-id-and-user-id-convertor/?
+  ;;
+  ;; youtube also provides an OPML file that can be imported, sorta.
+  ;; i had issues importing the OPML when the elfeeds-feeds var was
+  ;; already set.  assigning it to nil and running elfeed-load-opml
+  ;; worked ok though.  the JS to generate the OPML file is here:
+  ;; https://github.com/jeb5/YouTube-Subscriptions-RSS
+  ;;
+  ;; full feed URLs.
+  (setq ii/elfeed-feeds
+        '(("http://rss.slashdot.org/Slashdot/slashdotMain")
+          ("http://feeds.feedburner.com/CrackedRSS")
+          ("https://xkcd.com/atom.xml")
+          ("http://www.questionablecontent.net/QCRSS.xml")
+          ("https://elixir-lang.org/atom.xml")
+          ("https://feeds.macrumors.com/MacRumors-All")))
+  ;; the names of reddit sub-reddits
+  (setq ii/elfeed-reddit
+        '("elixir" "emacs" "qlab" "NewOrleans" "planetemacs" "Throwers"
+          "zsaVoyager" "FellowProducts" "erlang"))
+  (dolist (f ii/elfeed-reddit)
+    (add-to-list 'elfeed-feeds (format "http://www.reddit.com/r/%s/.rss" f)))
+  (dolist (f ii/elfeed-feeds)
+    (add-to-list 'elfeed-feeds f)))
 
 (use-package vterm
   :straight t
