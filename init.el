@@ -610,7 +610,8 @@ save it in `ffap-file-at-point-line-number' variable."
 
 (use-package ellama
   :straight t
-  :ensure t
+  :demand t
+  :after (magit)
   :bind ("<f7>" . ellama)
   :config
   (require 'llm-gemini)
@@ -1181,7 +1182,6 @@ _v_: visualize mode       _D_: disconnect
 (use-package magit
   :straight t
   :demand t
-  :after ellama
   :bind (("s-g" . 'magit-status))
   :hook ((before-save . magit-wip-commit-initial-backup)
          (git-commit-setup . git-commit-turn-on-flyspell))

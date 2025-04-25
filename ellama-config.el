@@ -19,7 +19,7 @@ This function is intended for `git-commit-setup-hook'."
       ;; If generation was requested, successful, and returned text:
       (when (and generate? generated-message (not (string-empty-p generated-message)))
         (insert generated-message)
-        (goto-char (point-min)) ; Move cursor to beginning
+        (goto-char (point-min))
         (message "Ellama generated commit message inserted.")))))
 
 (add-hook 'git-commit-setup-hook #'ii/magit-offer-ellama-commit-message 90)
