@@ -608,6 +608,7 @@ save it in `ffap-file-at-point-line-number' variable."
 
   ) ;;; end (use-package emacs ...)
 
+;; loads after magit to ensure the hook we setup is available.
 (use-package ellama
   :straight t
   :demand t
