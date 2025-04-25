@@ -9,7 +9,10 @@ This function is intended for `git-commit-setup-hook'."
            (generated-message (when generate?
                                 (condition-case err
                                     ;; Call the actual generation function
-                                    (ellama-generate-commit-message)
+                                    (progn
+                                      (insert "# Generating message...")
+                                      (newline)
+                                      (ellama-generate-commit-message))
                                   ;; Catch potential errors during generation
                                   (error (message "Ellama commit message generation failed: %s" err)
                                          nil))))) ; Return nil on error
