@@ -1,6 +1,7 @@
 *
 !early-init.el
 !init.el
+!ellama-config.el
 !.gitignore
 !README.md
 !snippets

@@ -615,7 +615,7 @@ save it in `ffap-file-at-point-line-number' variable."
   :config
   (require 'llm-gemini)
   (setq ellama-response-format "markdown")
-
+  (load-file (ii/emacs-dir-file "ellama-config.el"))
   ;; Configure ellama to use the Gemini provider
   (setq ellama-provider
         (make-llm-gemini
@@ -819,25 +819,6 @@ save it in `ffap-file-at-point-line-number' variable."
   :after dired
   :config
   (add-hook 'dired-mode-hook 'dired-collapse-mode))
-
-(use-package gptel
-  :straight t
-  :bind (("H-a" . gptel-menu))
-  :config
-
-  (defun ii/add-tree-to-gptel-context (path ext)
-    "Add all files in PATH with extension EXT to gptel context"
-    (interactive)
-    (let ((extension (rx (seq "." (literal ext) line-end))))
-      (dolist (f (directory-files-recursively path extension))
-        (gptel-add-file f))))
-
-  (setq
-   gptel-model 'codegemma:7b
-   gptel-backend (gptel-make-ollama "Ollama"
-                   :host (concat (ii/tailscale-address "ollama") ":11434")
-                   :stream t
-                   :models '(codegemma:7b codellama:13b sqlcoder:15b))))
 
 (use-package all-the-icons
   :straight t
@@ -1200,6 +1181,7 @@ _v_: visualize mode       _D_: disconnect
 (use-package magit
   :straight t
   :demand t
+  :after ellama
   :bind (("s-g" . 'magit-status))
   :hook ((before-save . magit-wip-commit-initial-backup)
          (git-commit-setup . git-commit-turn-on-flyspell))
@@ -1210,12 +1192,12 @@ _v_: visualize mode       _D_: disconnect
   (setq magit-commit-show-diff nil)
   (magit-wip-mode 1))
 
-(use-package structured-commit
-  :after magit
-  :straight '(structured-commit :type git
-                                :host github
-                                :repo "bunnylushington/structured-commit")
-  :hook (git-commit-setup . structured-commit/write-message))
+;; (use-package structured-commit
+;;   :after (magit ellama)
+;;   ;; :hook (git-commit-setup . ii/maybe-ellama-commit-message)
+;;   :straight '(structured-commit :type git
+;;                                 :host github
+;;                                 :repo "bunnylushington/structured-commit"))
 
 (use-package ghub
   :straight t)
