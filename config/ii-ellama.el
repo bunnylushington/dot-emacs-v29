@@ -1,3 +1,18 @@
+(keymap-set ellama-session-mode-map "M-*"
+            'ellama-chat-send-last-message)
+
+(setq ellama-provider
+      (make-llm-gemini
+       :key (auth-source-pick-first-password
+             :host '("generativelanguage.googleapis.com"))
+       :chat-model "gemini-2.5-pro-preview-03-25"))
+(setq
+ ellama-response-format "markdown"
+ ellama-major-mode 'markdown-mode
+ ellama-assistant-nick "Robot Friend"
+ ellama-user-nick "Bunny"
+ ellama-fill-paragraphs nil)
+(add-hook 'ellama-chat-mode-hook #'visual-line-mode)
 
 (defun ii/magit-offer-ellama-commit-message ()
   "Offer to generate commit message with Ellama when initiating a Magit commit.

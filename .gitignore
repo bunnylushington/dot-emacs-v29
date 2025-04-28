@@ -1,8 +1,10 @@
 *
 !early-init.el
 !init.el
-!ellama-config.el
 !.gitignore
 !README.md
 !snippets
+
 !unicode-mapping.el
+!config/ii-ellama.el
+!config/ii-project.el

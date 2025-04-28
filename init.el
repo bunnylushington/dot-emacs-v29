@@ -616,15 +616,7 @@ save it in `ffap-file-at-point-line-number' variable."
   :bind ("<f7>" . ellama)
   :config
   (require 'llm-gemini)
-  (setq ellama-response-format "markdown")
-  (load-file (ii/emacs-dir-file "ellama-config.el"))
-  ;; Configure ellama to use the Gemini provider
-  (setq ellama-provider
-        (make-llm-gemini
-         :key (auth-source-pick-first-password
-               :host "generativelanguage.googleapis.com")
-         :chat-model "gemini-2.5-pro-preview-03-25"
-         )))
+  (load-file (ii/emacs-dir-file "config/ii-ellama.el")))
 
 (use-package apropos
   :config
@@ -1438,16 +1430,7 @@ _v_: visualize mode       _D_: disconnect
 
 (use-package project
   :config
-  (defun ii/project-current-short-name ()
-    "A short name for the current project or nil."
-    (interactive)
-    (let ((current (project-current)))
-      (if current
-          (let* ((name (caddr current))
-                 (prj (cadr (reverse (file-name-split name)))))
-            prj)
-        nil))))
-
+  (load-file (ii/emacs-dir-file "config/ii-project.el")))
 
 ;; LSP-Mode
 (use-package lsp-mode
