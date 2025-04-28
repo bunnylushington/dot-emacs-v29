@@ -26,6 +26,15 @@
   (let* ((default-directory (project-root (project-current t))))
     (magit-status default-directory)))
 
+(defun ii/project-scratch-buffer ()
+  "Open a project specific scratch buffer."
+  (interactive)
+  (let* ((default-directory (project-root (project-current t)))
+         (buffer-name (project-prefixed-buffer-name "scratch"))
+         (new-buffer (get-buffer-create buffer-name)))
+    (funcall initial-major-mode)
+    (switch-to-buffer new-buffer)))
+
 (defun ii/project-three-pane ()
   (interactive)
   (let* ((default-directory (project-root (project-current t))))
@@ -34,17 +43,21 @@
     (split-window-below)
     (windmove-down)
     (ii/project-vterm)
+    (set-window-dedicated-p (selected-window) t)
     (windmove-right)
     (project-dired)
     (ii/project-magit-status)
+    (forge-pull)
+    (magit-section-show-level-3-all)
     (select-window (car (window-list)))
-    (scratch-buffer)))
+    (ii/project-scratch-buffer)))
 
 (custom-set-variables
  '(project-switch-commands
    '((ii/project-vterm "VTerm" "v")
      (project-dired "Dired")
      (project-find-file "Find File")
+     (ii/project-scratch-buffer "Scratch" "s")
      (ii/project-three-pane "Three Pane" "t")
      (ii/project-magit-status "Magit Status" "m"))))
 
