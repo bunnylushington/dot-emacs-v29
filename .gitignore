@@ -6,5 +6,6 @@
 !snippets
 
 !unicode-mapping.el
+!config
 !config/ii-ellama.el
 !config/ii-project.el
