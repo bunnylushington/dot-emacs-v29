@@ -24,7 +24,7 @@
   "Open the magit-status window in the project root."
   (interactive)
   (let* ((default-directory (project-root (project-current t))))
-    (magit-status default-directory)))
+    (call-interactively #'magit-status)))
 
 (defun ii/project-scratch-buffer ()
   "Open a project specific scratch buffer."
@@ -32,8 +32,8 @@
   (let* ((default-directory (project-root (project-current t)))
          (buffer-name (project-prefixed-buffer-name "scratch"))
          (new-buffer (get-buffer-create buffer-name)))
-    (funcall initial-major-mode)
-    (switch-to-buffer new-buffer)))
+    (switch-to-buffer new-buffer)
+    (funcall initial-major-mode)))
 
 (defun ii/project-three-pane ()
   (interactive)
