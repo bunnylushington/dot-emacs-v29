@@ -2777,6 +2777,10 @@ Completion is available."))
   (global-set-key (kbd "C-;") 'avy-goto-char)
   (global-set-key (kbd "C-'") 'avy-goto-char-timer))
 
+(use-package hungry-delete
+  :straight t
+  :config (global-hungry-delete-mode))
+
 (use-package kubed
   :straight t
   :config
