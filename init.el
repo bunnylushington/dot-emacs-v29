@@ -698,6 +698,17 @@ save it in `ffap-file-at-point-line-number' variable."
                          tab-bar-format-align-right
                          ii/tab-bar-timeclock
                          "  "
+(defun ii/tab-select ()
+  "Select a tab by number."
+  (interactive)
+  (let* ((count (length (tab-bar-tabs)))
+         (chars (mapcar (lambda (x) (string-to-char (number-to-string x)))
+                        (number-sequence 1 count)))
+         (sel (read-char-choice-with-read-key
+               (format "Tab (1 .. %d): " count)
+               chars))
+         (tab-number (string-to-number (char-to-string sel))))
+    (tab-select tab-number)))
                          ))
 
   (defvar ii/tab-map
@@ -711,6 +722,7 @@ save it in `ffap-file-at-point-line-number' variable."
     "Tab bar commands.")
 
   (keymap-set global-map "s-." ii/tab-map)
+  (keymap-set global-map "s-x" #'ii/tab-select)
 
   (defvar ii/timeclock-in-arrow
     (propertize " ➕ " 'display '(raise -0.20)))
