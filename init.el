@@ -252,6 +252,7 @@
          ("s-d" . ii/toggle-dedicate-vterm-buffer)
          ("H-," . xref-go-back)
          ("H-." . xref-find-definitions)
+         ("s-y" . bury-buffer)
 	     ("C-c w" . display-fill-column-indicator-mode))
 
   :hook ((after-save . executable-make-buffer-file-executable-if-script-p))
