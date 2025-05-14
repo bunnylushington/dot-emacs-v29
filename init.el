@@ -973,11 +973,11 @@ _v_: visualize mode       _D_: disconnect
   (set-face-attribute 'shr-h3 nil
                       :height 1.2
                       :weight 'bold
-                      :foreground (nord-color "frost-0"))
+                      :foreground (nord-color "aurora-1"))
   (set-face-attribute 'shr-h4 nil
                       :foreground (nord-color "snow-storm-1"))
   (set-face-attribute 'shr-link nil
-                      :foreground (nord-color "frost-3"))
+                      :foreground (nord-color "frost-4"))
   (set-face-attribute 'devdocs-code-block nil
                       :extend t
                       :foreground (nord-color "aurora-3")
@@ -1047,12 +1047,13 @@ _v_: visualize mode       _D_: disconnect
   (corfu-auto-delay 1)
   (corfu-separator ?\s)
   (corfu-quit-at-boundary nil)
-  (corfu-quit-no-match t)
+  (corfu-quit-no-match 'separator)
   (corfu-preview-current nil)
   (corfu-preselect-first t)
   (corfu-on-exact-match t)
   (corfu-echo-documentation nil)
   :config
+  (keymap-set corfu-map "H-SPC" #'corfu-insert-separator)
   (set-face-attribute 'corfu-default nil
                       :background (nord-color "polar-night-0")
                       :foreground (nord-color "aurora-3"))
@@ -1064,17 +1065,18 @@ _v_: visualize mode       _D_: disconnect
   (global-corfu-mode))
 
 (use-package corfu-popupinfo
+  ;; note that M-t will display the popup
   :custom
   (corfu-popupinfo-min-width 40)
   (corfu-popupinfo-max-width 90)
-  (corfu-popupinfo-min-height 2)
-  (corfu-popupinfo-delay '(2.0 . 1.0))
+  (corfu-popupinfo-min-height 5)
+  (corfu-popupinfo-delay '(1.0 . 1.0))
   (corfu-popupinfo-hide t)
   :bind
   (("M-n" . corfu-popupinfo-scroll-up)
    ("M-p" . corfu-popupinfo-scroll-down))
   :config
-  (corfu-popupinfo-mode))
+  (corfu-popupinfo-mode 1))
 
 (use-package kind-icon
   :if (display-graphic-p)
@@ -1155,6 +1157,13 @@ _v_: visualize mode       _D_: disconnect
 
 
 (use-package orderless
+  ;;  %  --  char-fold-to-regexp
+  ;;  !  --  orderless-not
+  ;;  &  --  orderless-annotation
+  ;;  ,  --  orderless-initialism
+  ;;  =  --  orderless-literal
+  ;;  ^  --  orderless-literal-prefix
+  ;;  ~  --  orderless-flex
   :straight t)
 
 (use-package wgrep
