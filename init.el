@@ -708,8 +708,8 @@ save it in `ffap-file-at-point-line-number' variable."
                (format "Tab (1 .. %d): " count)
                chars))
          (tab-number (string-to-number (char-to-string sel))))
-    (tab-select tab-number)))
-                         ))
+    (message nil)
+    (tab-select tab-number)))))
 
   (defvar ii/tab-map
     (let ((map (make-sparse-keymap)))
