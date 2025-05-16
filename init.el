@@ -271,7 +271,6 @@
    tab-width 2
    window-combination-resize t
    help-window-select t
-   dired-movement-style 'cycle
 
    ;; fill column
    display-fill-column-indicator-character 124
@@ -607,6 +606,7 @@ save it in `ffap-file-at-point-line-number' variable."
   ;; new in v30
   (kill-ring-deindent-mode 1)
 
+  (save-place-mode 1)
   ) ;;; end (use-package emacs ...)
 
 ;; loads after magit to ensure the hook we setup is available.
@@ -804,28 +804,6 @@ save it in `ffap-file-at-point-line-number' variable."
 	      (text-scale-set 2)
       (text-scale-set 0)))
   (advice-add #'zoom-window-zoom :after #'ii/enlarge-on-zoom))
-
-(use-package dired
-  :config
-  (set-face-attribute 'dired-directory nil
-                      :foreground (nord-color "aurora-2"))
-  (setq dired-use-ls-dired nil
-        dired-listing-switches "-lhA"
-        dired-kill-when-opening-new-dired-buffer t
-        dired-vc-rename-file t))
-
-(use-package dired-subtree
-  :straight t
-  :after dired
-  :bind (:map dired-mode-map
-              ("<tab>" . dired-subtree-toggle)
-              ("<C-tab>" . dired-subtree-cycle)))
-
-(use-package dired-collapse
-  :straight t
-  :after dired
-  :config
-  (add-hook 'dired-mode-hook 'dired-collapse-mode))
 
 (use-package all-the-icons
   :straight t
@@ -1453,6 +1431,14 @@ _v_: visualize mode       _D_: disconnect
 (use-package project
   :config
   (load-file (ii/emacs-dir-file "config/ii-project.el")))
+
+(use-package dired
+  :config
+  (load-file (ii/emacs-dir-file "config/ii-dired.el")))
+
+(use-package recentf
+  :config
+  (load-file (ii/emacs-dir-file "config/ii-recentf.el")))
 
 ;; LSP-Mode
 (use-package lsp-mode

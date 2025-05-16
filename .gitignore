@@ -1,4 +1,4 @@
-*
+/*
 !early-init.el
 !init.el
 !.gitignore
@@ -6,6 +6,5 @@
 !snippets
 
 !unicode-mapping.el
-!config
-!config/ii-ellama.el
-!config/ii-project.el
+!/config
+!/config/**
