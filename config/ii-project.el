@@ -46,11 +46,12 @@
     (set-window-dedicated-p (selected-window) t)
     (windmove-right)
     (project-dired)
+    (ii/project-recentf-open-files default-directory)
     (ii/project-magit-status)
     (forge-pull)
     (magit-section-show-level-3-all)
-    (select-window (car (window-list)))
-    (ii/project-scratch-buffer)))
+    (ii/project-scratch-buffer)
+    (select-window (nth 2 (window-list)))))
 
 (custom-set-variables
  '(project-switch-commands
