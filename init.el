@@ -1172,6 +1172,16 @@ _v_: visualize mode       _D_: disconnect
   :after flymake-json
   :straight t)
 
+(use-package flyspell
+  :straight t
+  :config
+  (set-face-attribute 'flyspell-incorrect nil
+                      :box `(:line-width (1 . 1) :color ,(nord-color "polar-night-3"))
+                      :background (nord-color "snow-storm-1")
+                      :foreground (nord-color "polar-night-1"))
+  (add-hook 'text-mode-hook 'flyspell-mode)
+  (add-hook 'prog-mode-hook 'flyspell-prog-mode))
+
 (use-package magit
   :straight t
   :demand t
@@ -2216,7 +2226,7 @@ VTerm)."
   (setq
    lui-fill-column 78
    lui-time-stamp-position 'right-margin
-   lui-flyspell-p nil
+   lui-flyspell-p t
    lui-fill-type nil
    lui-scroll-behavior 'post-output
    slack-log-level 'info
