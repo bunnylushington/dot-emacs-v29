@@ -1562,7 +1562,6 @@ _v_: visualize mode       _D_: disconnect
   :custom
   (go-ts-mode-indent-offset 2)
   (gofmt-command "goimports")
-  :bind (("H-d" . ii/go-debug-var))
   :hook ((go-ts-mode . ii/set-tab-width)
          (go-ts-mode . ii/lsp-go-save-hooks)))
 
@@ -2881,3 +2880,10 @@ end tell"))
           #'ii/help-fns-history)
 
 (keymap-set global-map "C-c f" #'ii/help-fns)
+(put 'set-goal-column 'disabled nil)
+
+
+(if (eql system-type 'darwin)
+    (use-package osx-dictionary
+      :straight t
+      :bind ("H-d" . osx-dictionary-search-word-at-point)))
