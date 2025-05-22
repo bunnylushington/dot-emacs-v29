@@ -462,7 +462,7 @@
 	      (,(rx (or
 		         "*xref*"
 		         "Magit"
-                 "*Embark Export"
+             "*Embark Export"
 		         "converge.org"
 		         "COMMIT_EDITMSG"))
 	       (display-buffer-in-side-window)
@@ -1176,9 +1176,10 @@ _v_: visualize mode       _D_: disconnect
   :straight t
   :config
   (set-face-attribute 'flyspell-incorrect nil
-                      :box `(:line-width (1 . 1) :color ,(nord-color "polar-night-3"))
-                      :background (nord-color "snow-storm-1")
-                      :foreground (nord-color "polar-night-1"))
+                      :box `(:line-width (2 . 2) :color ,(nord-color "aurora-1"))
+                      :background (nord-color "snow-storm-3")
+                      :foreground (nord-color "show-storm-1"))
+  ; this is the
   (add-hook 'text-mode-hook 'flyspell-mode)
   (add-hook 'prog-mode-hook 'flyspell-prog-mode))
 
@@ -1873,44 +1874,46 @@ VTerm)."
   (set-face-attribute 'hl-line nil
                       :background "#1f232c"))
 
-(use-package ekg
-  :straight t
-  :custom (ekg-display-note-template
-           (concat "\n%n(titled)\n%n(text 500)\n%n(id)%n(tagged)%n(other)"
-                   (make-string 40 ?_)))
-  :config
+;; (use-package ekg
+;;   :straight t
+;;   :custom (ekg-display-note-template
+;;            (concat "\n%n(titled)\n%n(text 500)\n%n(id)%n(tagged)%n(other)"
+;;                    (make-string 40 ?_)))
+;;   :config
 
-  (set-face-attribute 'ekg-title nil
-                      :foreground (nord-color "aurora-4")
-                      :height 1.3
-                      :underline nil)
-  (set-face-attribute 'ekg-metadata nil
-                      :background (nord-color "polar-night-0")
-                      :foreground (nord-color "aurora-3")
-                      :inherit 'ekg-tag)
-  (set-face-attribute 'ekg-notes-mode-title nil
-                      :box nil
-                      :underline nil
-                      :foreground (nord-color "aurora-2")
-                      :height 1.3)
-  (set-face-attribute 'ekg-tag nil
-                      :box nil
-                      ;; :background (nord-color "polar-night-0")
-                      :foreground (nord-color "aurora-3")
-                      :height 1.1)
+;;   (set-face-attribute 'ekg-title nil
+;;                       :foreground (nord-color "aurora-4")
+;;                       :height 1.3
+;;                       :underline nil)
+;;   (set-face-attribute 'ekg-metadata nil
+;;                       :background (nord-color "polar-night-0")
+;;                       :foreground (nord-color "aurora-3")
+;;                       :inherit 'ekg-tag)
+;;   (set-face-attribute 'ekg-notes-mode-title nil
+;;                       :box nil
+;;                       :underline nil
+;;                       :foreground (nord-color "aurora-2")
+;;                       :height 1.3)
+;;   (set-face-attribute 'ekg-tag nil
+;;                       :box nil
+;;                       ;; :background (nord-color "polar-night-0")
+;;                       :foreground (nord-color "aurora-3")
+;;                       :height 1.1)
 
-  (global-set-key (kbd "<f9>") 'ekg-capture)
-  (global-set-key (kbd "<f10>") 'ekg-show-notes-with-any-tags)
-  (global-set-key (kbd "C-<f10>") 'ekg-show-notes-with-all-tags)
-  (setq ekg-capture-default-mode 'gfm-mode)
-  (add-to-list 'ekg-acceptable-modes 'gfm-mode))
+;;   (global-set-key (kbd "<f9>") 'ekg-capture)
+;;   (global-set-key (kbd "<f10>") 'ekg-show-notes-with-any-tags)
+;;   (global-set-key (kbd "C-<f10>") 'ekg-show-notes-with-all-tags)
+;;   (setq ekg-capture-default-mode 'gfm-mode)
+;;   (add-to-list 'ekg-acceptable-modes 'gfm-mode))
 
-(use-package ekg-extras
-  :after ekg
-  :bind (("H-e" . ekg-extras/hydra))
-  :straight '(ekg-extras :type git
-                         :host codeberg
-                         :repo "bunnylushington/ekg-extras"))
+;; (use-package ekg-extras
+;;   :after ekg
+;;   :bind (("H-e" . ekg-extras/hydra))
+;;   :straight '(ekg-extras :type git
+;;                          :host codeberg
+;;                          :repo "bunnylushington/ekg-extras"))
+
+(load-file (ii/emacs-dir-file "config/ii-ekg.el"))
 
 ;; Restclient
 (use-package restclient
