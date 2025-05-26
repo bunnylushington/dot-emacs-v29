@@ -380,6 +380,7 @@
 	      (,(rx (or "*detached shell command*"
 		            "*detached-session-output"
 		            "cmd: " ;; for specially named detached shell commands
+                    "*Magit Repositories*"
 		            "*detached-list*"
 		            "*Flycheck errors*"))
 	       (display-buffer-in-side-window)
@@ -1194,6 +1195,21 @@ _v_: visualize mode       _D_: disconnect
                       :background (nord-color "polar-night-1"))
 
   (setq magit-commit-show-diff nil)
+
+  ;;; i use magit-config.el to set local paths:
+  ;;  (setq magit-repository-directories
+  ;;         '(("~/projects" . 2)))
+  (load-file (ii/emacs-dir-file "magit-config.el"))
+
+  (setq magit-repolist-columns
+        '(("Name" 25 magit-repolist-column-ident nil)
+          ("Version" 25 magit-repolist-column-version ((:sort magit-repolist-version<)))
+          ("B<U" 3 magit-repolist-column-unpulled-from-upstream ((:right-align t) (:sort <)))
+          ("B>U" 3 magit-repolist-column-unpushed-to-upstream ((:right-align t) (:sort <)))
+          ("Branch" 25 magit-repolist-column-branch nil)
+          ("Path" 99 magit-repolist-column-path nil)))
+
+
   (magit-wip-mode 1))
 
 ;; (use-package structured-commit
