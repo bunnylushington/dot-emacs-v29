@@ -1,0 +1,37 @@
+*** Mon May 26, 2025 -- 11:15:26 CDT
+*** Bunny Lushington <bunny@bapi.us>
+
+feat: Enhance AI-Powered Squash Commit Messages and Release Note Generation
+
+This update introduces and refines a powerful new feature for generating
+squash commit messages using an AI assistant. The system is designed to
+produce user-friendly release notes, can automatically update a `CHANGELOG`
+file, and offers users control over its activation. These changes aim to
+streamline the process of summarizing work and preparing release
+documentation.
+
+* Corrected the squash message generation process, ensuring accurate branch
+    detection and restoring full AI-powered content creation.
+
+* Temporarily adjusted AI-powered squash message generation settings during
+    the development and refinement of this feature.
+
+* You can now choose whether to generate an AI-assisted squash message and
+    update the associated `CHANGELOG` entry when squashing commits.
+
+* Enhanced the AI-powered squash message feature to generate comprehensive,
+    user-friendly release notes and to automatically update a `CHANGELOG`
+    file.
+
+* Enabled AI-powered generation of squash commit messages within Magit,
+    providing an automated way to create summaries for squashed commits.
+
+* Introduced a customizable entry point for squash merges in Magit, enabling
+    the integration of AI-assisted message generation.
+
+* Made AI squash message generation interactive, allowing users to specify a
+    custom range of revisions for the summary.
+
+* Introduced initial support for generating squash commit messages using an
+    AI assistant, including a template for structured, release-note style
+    output.
