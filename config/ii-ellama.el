@@ -80,7 +80,7 @@ I will provide you with the output of the command '%s'.
 
 Based on the following git commit log, please generate release notes for
 end users.  These notes should not contain sensitive information or
-implementation details.  The relee notes will also be used as a git
+implementation details.  The release notes will also be used as a git
 merge message.
 
 The notes should have three sections:
