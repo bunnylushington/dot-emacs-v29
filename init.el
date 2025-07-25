@@ -253,6 +253,7 @@
          ("H-," . xref-go-back)
          ("H-." . xref-find-definitions)
          ("s-y" . bury-buffer)
+         ("H-x" . next-error)
 	     ("C-c w" . display-fill-column-indicator-mode))
 
   :hook ((after-save . executable-make-buffer-file-executable-if-script-p))
@@ -1177,9 +1178,9 @@ _v_: visualize mode       _D_: disconnect
   :straight t
   :config
   (set-face-attribute 'flyspell-incorrect nil
-                      :box `(:line-width (2 . 2) :color ,(nord-color "aurora-1"))
-                      :background (nord-color "snow-storm-3")
-                      :foreground (nord-color "show-storm-1"))
+                      :box nil
+                      :background (nord-color "polar-night-0")
+                      :foreground (nord-color "aurora-0"))
   ; this is the
   (add-hook 'text-mode-hook 'flyspell-mode)
   (add-hook 'prog-mode-hook 'flyspell-prog-mode))
@@ -1194,6 +1195,10 @@ _v_: visualize mode       _D_: disconnect
   (set-face-attribute 'magit-section-highlight nil
                       :background (nord-color "polar-night-1"))
 
+  (let ((git "/opt/homebrew/bin/git"))
+    (when (and (eq system-type 'darwin)
+               (file-exists-p git))
+      (setq magit-git-executable git)))
   (setq magit-commit-show-diff nil)
 
   ;;; i use magit-config.el to set local paths:
@@ -1711,6 +1716,11 @@ _v_: visualize mode       _D_: disconnect
     (interactive)
     (elixir-test--run-test (vector "mix" "dialyzer" nil)))
 
+  (defun elixir-test-extras-coverage ()
+    (interactive)
+    (elixir-test--run-test (vector "mix" "testcov" nil)))
+
+
   (defhydra ii/elixir-test (:color pink
                                    :hint nil
                                    :exit t)
@@ -1722,9 +1732,8 @@ _f_: test file         _u_: test parent directory
 _d_: test directory    _._: rerun failed test
 _a_: test all          _t_: toggle implementation/test
 
-_c_: credo test
-_o_: doctor test
-_y_: dialyzer
+_c_: credo test        _y_: dialyzer
+_o_: doctor test       _v_: coverage
 
 "
     ("s" elixir-test-at-point)
@@ -1738,6 +1747,7 @@ _y_: dialyzer
     ("c" elixir-test-extras-credo)
     ("o" elixir-test-extras-doctor)
     ("y" elixir-test-extras-dialyzer)
+    ("v" elixir-test-extras-coverage)
     ("q" nil "quit" :color build))
 
 
