@@ -98,19 +98,22 @@
    (if (not (bound-and-true-p vterm-copy-mode)) ">_" "CP")))
 
 (defun ii/nano-modeline-rename-emulator-buffer ()
-  (let* ((prj (ii/project-current-short-name))
-         (mode (s-chop-suffix "-mode" (format "%s" major-mode)))
-         (dir (nano-modeline-default-directory 32))
-         (name
-          (if (and (string= mode "vterm")
-                   (not (s-starts-with? "#" (buffer-name))))
-              (if prj
-                  (format "%s: %s %s" mode prj dir)
-                (format "%s: %s" mode dir))
-            ;; is vterm-mode but has different prefix
-            (buffer-name))))
-    (with-current-buffer (rename-buffer name t))
-    (propertize name 'face nano-modeline-base-face)))
+  (let ((buffer-name (buffer-name)))
+    (if (string-match "gemini" buffer-name)
+        (propertize buffer-name 'face nano-modeline-base-face)
+      (let* ((prj (ii/project-current-short-name))
+             (mode (s-chop-suffix "-mode" (format "%s" major-mode)))
+             (dir (nano-modeline-default-directory 32))
+             (name
+              (if (and (string= mode "vterm")
+                       (not (s-starts-with? "#" (buffer-name))))
+                  (if prj
+                      (format "%s: %s %s" mode prj dir)
+                    (format "%s: %s" mode dir))
+                ;; is vterm-mode but has different prefix
+                (buffer-name))))
+        (with-current-buffer (rename-buffer name t))
+        (propertize name 'face nano-modeline-base-face)))))
 
 (defun ii/vterm-buffer-p ()
   "Is the current buffer a verm buffer"
@@ -620,6 +623,57 @@ save it in `ffap-file-at-point-line-number' variable."
   :config
   (require 'llm-gemini)
   (load-file (ii/emacs-dir-file "config/ii-ellama.el")))
+
+(use-package gemini-cli
+  :straight (:type git :host github
+                   :repo "linchen2chris/gemini-cli.el" :branch "main"
+                   :files ("*.el" (:exclude "demo.gif")))
+  :demand t
+  :after (vterm)
+  :bind-keymap
+  ("H-c" . gemini-cli-command-map)
+  :config
+  (setq gemini-cli-terminal-backend 'vterm)
+  ;; (setq gemini-cli-newline-keybinding-style 'super-return-to-send)
+  (setopt vterm-min-window-width 40)
+  (add-hook 'gemini-cli-start-hook
+            (lambda ()
+              (when (eq gemini-cli-terminal-backend 'vterm)
+                (setq-local vterm-max-scrollback 100000))))
+  (add-hook 'gemini-cli-start-hook #'ii/gemini-keymap-adjust)
+  (add-to-list 'display-buffer-alist
+               '("^\\*gemini"
+                 (display-buffer-in-side-window)
+                 (side . right)
+                 (window-width . 90)))
+  (when (find-font (font-spec :family "Menlo"))
+    (custom-set-faces
+     '(gemini-cli-repl-face ((t (:family "Menlo"))))))
+  (gemini-cli-mode))
+
+(defun ii/gemini-keymap-adjust ()
+  "<return> to add a newline
+M-<return to send the prompt to gemini
+s-c to toggle vterm/gemini read-only-mode (for copying)"
+  (use-local-map (copy-keymap vterm-mode-map))
+  (local-set-key (kbd "<return>") #'gemini-cli--vterm-send-alt-return)
+  (local-set-key (kbd "M-<return>") #'gemini-cli--vterm-send-return)
+  (local-set-key (kbd "s-c") 'gemini-cli-toggle-read-only-mode))
+
+ (defun ii/set-window-width (&optional width)
+   "Adjust the width of the selected window to WIDTH columns.
+ This requires another window to be present horizontally to
+ take or give space from."
+   (interactive "nWidth: ")
+   (let ((width (or width 80)))
+     (when (not (one-window-p))
+       (let ((delta (- width (window-width))))
+         (if (> delta 0)
+             (enlarge-window-horizontally delta)
+           (shrink-window-horizontally (abs delta)))))))
+
+(use-package eat
+  :straight t)
 
 (use-package apropos
   :config
@@ -1476,7 +1530,7 @@ _v_: visualize mode       _D_: disconnect
 (use-package lsp-mode
   :straight t
   :init
-  (add-to-list 'exec-path (ii/home-dir-file "elixir-ls"))
+  (add-to-list 'exec-path (ii/emacs-dir-file ".cache/lsp/elixir-ls/release"))
   (setq lsp-keymap-prefix "s-l"
         lsp-lens-enable nil
         lsp-lens-place-position 'above-line)
