@@ -630,6 +630,8 @@ save it in `ffap-file-at-point-line-number' variable."
                    :files ("*.el" (:exclude "demo.gif")))
   :demand t
   :after (vterm)
+  :bind
+  ("H-s-c" . gemini-cli-transient)
   :bind-keymap
   ("H-c" . gemini-cli-command-map)
   :config
@@ -638,6 +640,8 @@ save it in `ffap-file-at-point-line-number' variable."
   (setopt vterm-min-window-width 40)
   (add-hook 'gemini-cli-start-hook
             (lambda ()
+              (setq-local filter-buffer-substring-function
+                          #'ii/kill-ring-purge-line-numbers)
               (when (eq gemini-cli-terminal-backend 'vterm)
                 (setq-local vterm-max-scrollback 100000))))
   (add-hook 'gemini-cli-start-hook #'ii/gemini-keymap-adjust)
@@ -650,6 +654,16 @@ save it in `ffap-file-at-point-line-number' variable."
     (custom-set-faces
      '(gemini-cli-repl-face ((t (:family "Menlo"))))))
   (gemini-cli-mode))
+
+(defun ii/kill-ring-purge-line-numbers (beg end delete)
+  "When killing text with line numbers, remove the numbers."
+  (let ((text (buffer-substring beg end)))
+    (with-temp-buffer
+      (insert text)
+      (goto-char (point-min))
+      (replace-regexp
+       (rx (seq line-start (* blank) (+ numeric) space)) "")
+      (buffer-string))))
 
 (defun ii/gemini-keymap-adjust ()
   "<return> to add a newline
@@ -1387,6 +1401,18 @@ _v_: visualize mode       _D_: disconnect
   :config
   (add-to-list 'vterm-eval-cmds
                '("update-pwd" (lambda (path) (setq default-directory path))))
+
+;;; in vterm-mode turn on vterm-copy-mode when the mark is set.  note
+;;; that the mark will be set if there's a mouse click in the window.
+  (defun ii/vterm-auto-copy (&rest r)
+    (when (and
+           (boundp 'vterm-copy-mode)
+           (eq 'vterm-mode major-mode)
+           (not vterm-copy-mode))
+      (vterm-copy-mode 1)
+      (message "Vterm-Copy mode enabled in current buffer")))
+  (advice-add 'set-mark :before #'ii/vterm-auto-copy)
+
   (setq vterm-toggle-fullscreen-p nil
         vterm-toggle-hide-method nil
         disabled-command-hook nil
