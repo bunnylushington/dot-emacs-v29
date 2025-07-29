@@ -640,11 +640,11 @@ save it in `ffap-file-at-point-line-number' variable."
   (setopt vterm-min-window-width 40)
   (add-hook 'gemini-cli-start-hook
             (lambda ()
+              (ii/gemini-keymap-adjust)
               (setq-local filter-buffer-substring-function
                           #'ii/kill-ring-purge-line-numbers)
               (when (eq gemini-cli-terminal-backend 'vterm)
                 (setq-local vterm-max-scrollback 100000))))
-  (add-hook 'gemini-cli-start-hook #'ii/gemini-keymap-adjust)
   (add-to-list 'display-buffer-alist
                '("^\\*gemini"
                  (display-buffer-in-side-window)
@@ -1411,7 +1411,8 @@ _v_: visualize mode       _D_: disconnect
            (not vterm-copy-mode))
       (vterm-copy-mode 1)
       (message "Vterm-Copy mode enabled in current buffer")))
-  (advice-add 'set-mark :before #'ii/vterm-auto-copy)
+  ;; (advice-add 'set-mark :before #'ii/vterm-auto-copy)
+  ;; (advice-remove 'set-mark #'ii/vterm-auto-copy)
 
   (setq vterm-toggle-fullscreen-p nil
         vterm-toggle-hide-method nil
@@ -3006,3 +3007,32 @@ end tell"))
     (use-package osx-dictionary
       :straight t
       :bind ("H-d" . osx-dictionary-search-word-at-point)))
+
+(defun ii/clock ()
+  (interactive)
+  (let* ((now (format-time-string "%T %F"))
+         (time (concat
+                "\n"
+                (propertize (concat "  " (format-time-string "%T %F") "\n")
+                            'face '(:height 1.8 :weight 'bold))
+                "\n          UTC: "
+                (format-time-string "%T %F %z" nil t)
+                "  \n  New Orleans: "
+                (format-time-string "%T %F %z" nil "america/chicago")
+                "  \n       Boston: "
+                (format-time-string "%T %F %z" nil "america/new_york")
+                "  \n       Phuket: "
+                (format-time-string "%T %F %z" nil "asia/bangkok")
+                "\n\n"
+                )))
+    (when (posframe-workable-p)
+      (posframe-show
+       "clock"
+       :border-width 1
+       :border-color (nord-color "aurora-1")
+       :string time))
+    (unwind-protect
+        (read-event "Any key to dismiss...")
+      (posframe-delete "clock"))
+    now))
+(global-set-key (kbd "H-SPC") #'ii/clock)
