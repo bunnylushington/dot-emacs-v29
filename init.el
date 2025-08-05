@@ -1557,7 +1557,6 @@ _v_: visualize mode       _D_: disconnect
 (use-package lsp-mode
   :straight t
   :init
-  (add-to-list 'exec-path (ii/emacs-dir-file ".cache/lsp/elixir-ls/release"))
   (setq lsp-keymap-prefix "s-l"
         lsp-lens-enable nil
         lsp-lens-place-position 'above-line)
@@ -1573,8 +1572,6 @@ _v_: visualize mode       _D_: disconnect
 
   :hook ((go-mode . lsp)
          (go-ts-mode . lsp)
-         (elixir-mode . lsp)
-         (elixir-ts-mode . lsp)
          (typescript-mode . lsp)
          (typescript-ts-mode . lsp)
          (lsp-completion-mode . ii/lsp-mode-super-capf)
@@ -1582,11 +1579,6 @@ _v_: visualize mode       _D_: disconnect
   :custom
   (lsp-completion-provider :none)
   (lsp-modeline-diagnostics-enable nil)
-
-  ;; ;; This sure is hacky.  Why is lsp stuck at 0.14.0 (which fails with OTP 26)?
-  ;; (lsp-elixir-ls-version "v0.22.1")
-  ;; (lsp-elixir-ls-download-url
-  ;;  "https://github.com/elixir-lsp/elixir-ls/releases/download/v0.22.1/elixir-ls-v0.22.1.zip")
 
   :config
   ;; (lsp-register-custom-settings
@@ -1723,207 +1715,26 @@ _v_: visualize mode       _D_: disconnect
     (interactive "nIndention Level: ")
     (set-variable 'erlang-indent-level spaces t)))
 
-;; Elixir
 (use-package elixir-ts-mode
   :straight t
-  :after elixir-test
-  :bind (:map elixir-test-mode-map ("C-c e" . elixir-test-command-map))
-  :hook ((elixir-ts-mode . elixir-test-mode)
-         (elixir-ts-mode . ii/elixir-prettify-spec))
-  :custom
-  ;; (lsp-elixir-server-command
-  ;;  `(,(ii/home-dir-file "projects/lexical/_build/dev/package/lexical/bin/start_lexical.sh")))
-  (elixir-test-base-cmd "mix testall")
+  :demand t
+  :after (lsp-mode)
+  :init
+  (add-to-list 'exec-path (ii/emacs-dir-file ".cache/lsp/elixir-ls/release"))
   :config
-  (defun ii/elixir-prettify-spec ()
-    (dolist (mapping
-             (list
-              '("|>" . "▷")
-              '("->" . "➝")
-              '("<-" . "⭠")
-              '(">=" . "≧")
-              '("<=" . "≦")
-              '("@spec" . "🄢")
-              '("@doc" . "🄓")
-              '("@moduledoc" . "🄜")
-              ;; '("end" . "〉")
-              ;; '("do" . "〈")
-              '("==" . "⩵")))
-      (push mapping prettify-symbols-alist))
-    (prettify-symbols-mode 1)))
+  (load-file (ii/emacs-dir-file "config/ii-elixir.el"))
+  :hook ((elixir-ts-mode . lsp)
+         (elixir-ts-mode . ii/elixir-font-lock-spec)
+         (elixir-ts-mode . ii/elixir-prettify-spec)))
 
-;; this doesn't work well (comint buffers don't send tabs and so
-;; completion doesn't happen.  i like the functionality though so
-;; maybe there's potential in replacing comint with term?
-(use-package inf-elixir
-  :straight t
-  :bind (("C-c i i" . 'inf-elixir)
-         ("C-c i p" . 'inf-elixir-project)
-         ("C-c i l" . 'inf-elixir-send-line)
-         ("C-c i r" . 'inf-elixir-send-region)
-         ("C-c i b" . 'inf-elixir-send-buffer)
-         ("C-c i R" . 'inf-elixir-reload-module)))
-
-
-;; This was a little broken in v30 but something i might return to.
-;;
-;;
-;; ;; Elixir test.  This is kind of hacked together, I'm not yet sure why
-;; ;; the use-package configuration is so broken.
 (use-package elixir-test
   :straight '(elixir-test :type git
                           :host github
                           :repo "J3RN/elixir-test-mode")
+  :demand t
+  :after (elixir-ts-mode)
   :load-path "straight/repos/elixir-test-mode"
-  :bind (("H-t" . ii/elixir-test/body))
-  :init
-  (defun derived-mode-set-keymap (arg)
-    "provide missing fun"
-    (message "called derived-mode-set-keymap"))
-  :config
-  ;; Stolen from https://tinyurl.com/ycxucjue
-  ;; via https://tinyurl.com/4f9am84x
-  (require 'ansi-color)
-
-  (defun elixir-test-extras-credo ()
-    (interactive)
-    (elixir-test--run-test (vector "mix" "credo --strict" nil)))
-
-  (defun elixir-test-extras-doctor ()
-    (interactive)
-    (elixir-test--run-test (vector "mix" "doctor" nil)))
-
-  (defun elixir-test-extras-dialyzer ()
-    (interactive)
-    (elixir-test--run-test (vector "mix" "dialyzer" nil)))
-
-  (defun elixir-test-extras-coverage ()
-    (interactive)
-    (elixir-test--run-test (vector "mix" "testcov" nil)))
-
-
-  (defhydra ii/elixir-test (:color pink
-                                   :hint nil
-                                   :exit t)
-    "
-Elixir Test
-
-_s_: test at point     _l_: rerun last test
-_f_: test file         _u_: test parent directory
-_d_: test directory    _._: rerun failed test
-_a_: test all          _t_: toggle implementation/test
-
-_c_: credo test        _y_: dialyzer
-_o_: doctor test       _v_: coverage
-
-"
-    ("s" elixir-test-at-point)
-    ("f" elixir-test-file)
-    ("d" elixir-test-directory)
-    ("a" elixir-test-all)
-    ("l" elixir-test-rerun-last)
-    ("u" elixir-test-up)
-    ("." elixir-test-failed)
-    ("t" elixir-test-toggle-implementation)
-    ("c" elixir-test-extras-credo)
-    ("o" elixir-test-extras-doctor)
-    ("y" elixir-test-extras-dialyzer)
-    ("v" elixir-test-extras-coverage)
-    ("q" nil "quit" :color build))
-
-
-  (defun endless/colorize-compilation ()
-    "Colorize from `compilation-filter-start' to `point'."
-    (let ((inhibit-read-only t))
-      (ansi-color-apply-on-region
-       compilation-filter-start (point))))
-
-  (add-hook 'compilation-filter-hook #'endless/colorize-compilation))
-
-
-;; rcmp: not part of any package but useful with elixir projects
-(defun rcmp ()
-  "Compile or recompile the current project.
-
-rcmp (\"REPL Compile\") is a small utility function
-to (re)compile an Elixir mix based project.
-
-There should be a .dir-locals.el file in the root directory of
-the project.  It will have two keys, rcmp/compile-cmd and
-rcmp/recompile-cmd.  These values may be set in other ways (like
-the init.el file) if that's more convenient.  For example:
-
-  ((nil . ((rcmp/compile-cmd . \"iex -S mix\")
-           (rcmp/recompile-cmd . \"recompile\"))))
-
-The compile command will be sent to the rcmp buffer when it's
-first opened; if the buffer exists it is assumed iex (in this
-case) is already running and sends the recompile command.
-
-Note that recompiling, as hinted, requires iex to be running and
-probably on a blank REPL line.
-
-Any setup (e.g., environment variables) must be part of the shell
-environment VTerm creates.  I'm not yet sure what kind of setup
-would make sense for switching between multiple environments.
-
-I spent some time trying to make this all work with just
-`compile' but found the configuration onerous.  It is possible
-though, and worth remembering is that M-x compile with a prefix
-argument will open an interactive comint buffer.  Getting paths
-and envvars correct was messy (plus I am tooled up for using
-VTerm)."
-  (interactive)
-  (let ((default-directory (project-root (project-current))))
-    (let* ((project-name (project-name (project-current)))
-           (buf-name (rcmp/buffer-name))
-           (exists (get-buffer buf-name))
-           (buf (get-buffer-create buf-name))
-           (compile rcmp/compile-cmd)
-           (recompile rcmp/recompile-cmd)
-           (cmd (if exists recompile compile)))
-      (pop-to-buffer buf nil t)
-      (when (not exists)
-        (vterm-mode)
-        ;; Although in compilation-shell-minor-mode, VTerm whacks
-        ;; pretty much all the keybindings; set these explicitly in
-        ;; the compilation buffer (and don't interfere with other
-        ;; VTerm buffers elsewhere).
-        (use-local-map (copy-keymap vterm-mode-map))
-        (local-set-key (kbd "M-p") #'compilation-previous-error)
-        (local-set-key (kbd "M-n") #'compilation-next-error)
-        (local-set-key (kbd "M-<return>") #'compile-goto-error)
-        (local-set-key (kbd "<f12>") #'rcmp)
-        (local-set-key (kbd "s-<f12>") #'previous-window-any-frame)
-        (local-set-key (kbd "M-<f12>") #'rcmp/quit-window)
-        ;; VTerm does not consult the dir-locals so set those
-        ;; explicitly here allowing for recompilation from the rcmp
-        ;; buffer.
-        (set (make-local-variable 'rcmp/compile-cmd) compile)
-        (set (make-local-variable 'rcmp/recompile-cmd) recompile)
-        (compilation-shell-minor-mode))
-      (vterm-send-string cmd)
-      (vterm-send-return))))
-
-(defun rcmp/quit-window ()
-  "Quit or hide the rcmp compilation window."
-  (interactive)
-  (let ((win (get-buffer-window (rcmp/buffer-name))))
-    (when win
-      (if (or (window-at-side-p win 'top)
-              (window-at-side-p win 'bottom)
-              (window-at-side-p win 'left)
-              (window-at-side-p win 'right))
-          (window-toggle-side-windows)
-        (quit-window nil win)))))
-
-(defun rcmp/buffer-name ()
-  "Return the rcmp compile buffer name."
-  (format "rcmp: %s" (project-name (project-current))))
-
-(global-set-key (kbd "<f12>") #'rcmp)
-(global-set-key (kbd "M-<f12>") #'rcmp/quit-window)
-
+  :bind (:map elixir-ts-mode-map ("H-t" . ii/elixir-test/body)))
 
 
 ;; Tramp
